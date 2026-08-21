@@ -186,7 +186,7 @@ export function CodeEditor({
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '4px 8px',
         background: 'var(--cth-cream-200)',
-        borderBottom: '1px solid var(--cth-ink-700)',
+        borderBottom: '1px solid var(--cth-ink-100)',
         fontFamily: 'var(--cth-font-ui)', fontSize: 12,
         color: 'var(--cth-ink-700)'
       }}>
@@ -246,7 +246,7 @@ export function CodeEditor({
       {/* Footer actions when fullscreen */}
       {fullscreen && (
         <div style={{
-          padding: 8, borderTop: '1px solid var(--cth-ink-700)',
+          padding: 8, borderTop: '1px solid var(--cth-ink-100)',
           background: 'var(--cth-cream-200)',
           display: 'flex', justifyContent: 'flex-end', gap: 8
         }}>

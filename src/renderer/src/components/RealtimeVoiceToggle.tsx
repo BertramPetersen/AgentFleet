@@ -1,8 +1,8 @@
 /**
- * Realtime Michael — voice toggle + live state indicator (card rt-3, Phase 1).
+ * Realtime voice — voice toggle + live state indicator (card rt-3, Phase 1).
  *
- * A reusable mic button for the god/orchestrator agent ("Michael"). It consumes the
- * already-built `useRealtimeMichael()` voice-loop hook (a shared module-level singleton —
+ * A reusable mic button for the orchestrator (god) agent. It consumes the
+ * already-built `useRealtimeVoice()` voice-loop hook (a shared module-level singleton —
  * see realtime/session.ts) and exposes a single start/stop control plus a live indicator
  * of the loop's status.
  *
@@ -14,14 +14,14 @@
  * Click behaviour: status==='off' → connect(); anything else → disconnect().
  *
  * Rendered in two places (AgentCard for the god card, FullscreenTerminal header when
- * Michael is fullscreen). It is intentionally state-only / hook-only so both can mount it.
+ * the orchestrator is fullscreen). It is intentionally state-only / hook-only so both can mount it.
  */
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { PixelButton } from './PixelButton';
 import { Icon } from './Icon';
 import { useStore } from '@/store/store';
-import { useRealtimeMichael, type RealtimeStatus } from '@/realtime/session';
+import { useRealtimeVoice, type RealtimeStatus } from '@/realtime/session';
 
 /** Per-status presentation: button variant, short label, dot color, and (optional)
  *  animation for the live-state indicator dot. Maps hook.status → visuals. */
@@ -43,21 +43,21 @@ const STATE_VIEW: Record<
     variant: 'secondary',
     label: 'talk',
     dot: 'var(--cth-ink-300)',
-    help: 'Talk to Michael — start the voice session'
+    help: 'Talk to the orchestrator — start the voice session'
   },
   connecting: {
     variant: 'secondary',
     label: '…',
     dot: 'var(--cth-lemon)',
     anim: 'cth-blink 700ms steps(2, end) infinite',
-    help: 'Connecting to Michael…'
+    help: 'Connecting to the orchestrator…'
   },
   listening: {
     variant: 'primary',
     label: 'listening',
     dot: 'var(--cth-mint)',
     anim: 'cth-pulse 1000ms steps(2, end) infinite',
-    help: 'Listening — Michael is hearing you (click to stop)',
+    help: 'Listening — the orchestrator is hearing you (click to stop)',
     activeBg: 'var(--cth-mint)'
   },
   responding: {
@@ -65,7 +65,7 @@ const STATE_VIEW: Record<
     label: 'speaking',
     dot: 'var(--cth-sky)',
     anim: 'cth-pulse 600ms steps(2, end) infinite',
-    help: 'Michael is speaking (click to stop)',
+    help: 'The orchestrator is speaking (click to stop)',
     activeBg: 'var(--cth-sky)'
   },
   working: {
@@ -73,18 +73,18 @@ const STATE_VIEW: Record<
     label: 'working',
     dot: 'var(--cth-coral)',
     anim: 'cth-blink 500ms steps(2, end) infinite',
-    help: 'Michael is running a tool — mic muted (click to stop)'
+    help: 'The orchestrator is running a tool — mic muted (click to stop)'
   }
 };
 
-export interface RealtimeMichaelToggleProps {
+export interface RealtimeVoiceToggleProps {
   /** Compact form for the fullscreen header / tight rows — hides the text label. */
   compact?: boolean;
 }
 
-export function RealtimeMichaelToggle({ compact = false }: RealtimeMichaelToggleProps) {
+export function RealtimeVoiceToggle({ compact = false }: RealtimeVoiceToggleProps) {
   const hasOpenAiKey = useStore((s) => s.hasOpenAiKey);
-  const { status, error, connect, disconnect } = useRealtimeMichael();
+  const { status, error, connect, disconnect } = useRealtimeVoice();
   // Measured viewport coords, not a CSS offset. The agent dock clips its
   // children, so a popover positioned inside the card gets sliced at the card's
   // edge no matter how it is anchored — which is exactly what happened. A portal

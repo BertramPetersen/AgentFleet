@@ -1,5 +1,5 @@
 /**
- * Realtime Michael — read-tools (rt-4, Realtime Michael Phase 1).
+ * Realtime voice — read-tools (rt-4, Realtime voice Phase 1).
  *
  * The real function-tools that replace rt-2's placeholder no-op. Each one is a
  * thin, READ-ONLY wrapper over a window.cth bridge that already powers the office
@@ -115,7 +115,7 @@ export function realtimeReadTools(): ReturnType<typeof tool>[] {
     tool({
       name: 'get_fleet_status',
       description:
-        'Who is in the agent hive right now: how many agents, which are active versus archived, who the god orchestrator is, and each active agent name, role, and engine. Call this when the user asks who is working, who is on the floor, or for a roster.',
+        'Who is in the agent hive right now: how many agents, which are active versus archived, who the god orchestrator is, and each active agent name, role, and engine. Call this when the user asks who is working, who is in the fleet, or for a roster.',
       parameters: { type: 'object', properties: {}, required: [], additionalProperties: false },
       execute: () =>
         spoken(async () => {
@@ -591,7 +591,7 @@ export function realtimeReadTools(): ReturnType<typeof tool>[] {
             }));
           const doing = tasks.filter((t) => str(t.status) === 'doing').map((t) => ({ title: str(t.title), owner: str(t.assignee) || undefined }));
           const blocked = tasks.filter((t) => str(t.status) === 'blocked').map((t) => ({ title: str(t.title), owner: str(t.assignee) || undefined }));
-          const summary = `${plural(rows.length, 'agent')} on the floor, ${doing.length} in progress, ${blocked.length} blocked.`;
+          const summary = `${plural(rows.length, 'agent')} in the fleet, ${doing.length} in progress, ${blocked.length} blocked.`;
           // Flagged JSON per the Realtime prompting guidance: precise fields the
           // model can quote verbatim, with the spoken line separate.
           return `${summary} DATA: ${JSON.stringify({ agents: rows, doing, blocked })}`;
@@ -615,7 +615,7 @@ export function realtimeReadTools(): ReturnType<typeof tool>[] {
 }
 
 /**
- * A short, preloaded orientation Michael can open the session with — the hive
+ * A short, preloaded orientation the orchestrator can open the session with — the hive
  * size, who god is, and how many tasks are in flight — so the first answer is
  * grounded without a tool round-trip. Best-effort: returns '' if reads fail, so
  * the caller can safely concatenate it onto the agent instructions.

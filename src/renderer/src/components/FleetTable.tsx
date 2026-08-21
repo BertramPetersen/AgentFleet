@@ -294,7 +294,7 @@ export function FleetTable() {
                     color: 'var(--cth-ink-900)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                   }}>
-                    {a.name}{a.isGod ? ' · boss' : ''}
+                    {a.name}
                   </span>
                   <span style={{
                     fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',

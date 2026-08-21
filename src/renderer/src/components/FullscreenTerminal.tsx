@@ -9,7 +9,7 @@ import { AgentControlStrip } from './AgentControlStrip';
 import { CommandCenterPanel } from './CommandCenterPanel';
 import { Icon } from './Icon';
 import { AgentAvatar, AVATAR_UNIT } from './AgentAvatar';
-import { RealtimeMichaelToggle } from './RealtimeMichaelToggle';
+import { RealtimeVoiceToggle } from './RealtimeVoiceToggle';
 import { CostHud } from '@/realtime/CostHud';
 import { useStore, type Agent } from '@/store/store';
 import { usePtyParser } from '@/hooks/usePtyParser';
@@ -507,7 +507,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
           padding: 12, gap: 10
         }}>
           {agent.isGod ? (
-            // Michael runs the floor from the command center — its tabs (tasks,
+            // the orchestrator runs the floor from the command center — its tabs (tasks,
             // ask me, triggers, memory, graph…) are the whole point of selecting
             // him, and fullscreen used to drop them for a bare terminal.
             // Column so the panel's `height: 100%` resolves against a definite
@@ -871,7 +871,7 @@ function Header({ agent }: { agent: Agent }) {
 
   /** Kill + archive, mirroring AgentDetailPanel. Confirmed, because it ends a
    *  running process. God is exempt: the floor respawns it immediately, so the
-   *  button would read as "restart Michael" while looking like "close". */
+   *  button would read as "restart the orchestrator" while looking like "close". */
   const onKill = async () => {
     if (!agent.ptyId) return;
     if (!confirm(`Close ${agent.name}? The PTY process will terminate and the agent is archived (kept in history, off the floor).`)) return;
@@ -907,11 +907,11 @@ function Header({ agent }: { agent: Agent }) {
             fullscreen does not change the selection, so leaving the IDE to infer
             its agent would open whichever agent happens to be selected in the
             sidebar rather than the one filling the screen. */}
-        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls Michael (the
+        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls the orchestrator (the
             god orchestrator) globally, not the agent in view, so users can start a
             voice session even while a worker's terminal fills the screen. The cost
-            HUD stays Michael-only (it belongs to his card). */}
-        <RealtimeMichaelToggle />
+            HUD stays the orchestrator-only (it belongs to his card). */}
+        <RealtimeVoiceToggle />
         {agent.isGod && <CostHud compact />}
         <PixelButton variant="secondary" size="sm" onClick={openTerminal} disabled={openState === 'opening'}>
           <span

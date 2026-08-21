@@ -109,7 +109,7 @@ export function GitTab({ cwd }: GitTabProps) {
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '6px 10px',
         background: 'var(--cth-cream-200)',
-        borderBottom: '1px solid var(--cth-ink-700)'
+        borderBottom: '1px solid var(--cth-ink-100)'
       }}>
         <span style={{
           fontFamily: 'var(--cth-font-display)', fontSize: 10, lineHeight: '14px',

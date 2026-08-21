@@ -82,7 +82,7 @@ export function AgentInspector({ agent }: { agent: Agent }) {
         <span style={{
           fontFamily: 'var(--cth-font-display)', fontSize: 'var(--cth-text-display-md)',
           color: 'var(--cth-ink-900)'
-        }}>{agent.name}{agent.isGod ? ' · boss' : ''}</span>
+        }}>{agent.name}</span>
         <PixelBadge status={agent.status} />
         <Chip>{agent.provider ?? 'claude'}{agent.model ? ` · ${agent.model}` : ''}</Chip>
         <Chip>{agent.project}</Chip>
