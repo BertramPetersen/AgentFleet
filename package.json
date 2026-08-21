@@ -7,7 +7,7 @@
   "author": "Chaitanya Giri",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OWNER-TBD/agentfleet.git"
+    "url": "https://github.com/BertramPetersen/AgentFleet.git"
   },
   "scripts": {
     "dev": "electron-vite dev",
