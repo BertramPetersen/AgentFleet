@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore, type Agent } from '@/store/store';
+import { agentsInProject, type Project } from '@/store/projects';
 import { useFleetTelemetry, totalTokens } from '@/hooks/useTelemetry';
 import { PixelBadge } from './PixelBadge';
 import { AgentAvatar } from './AgentAvatar';
@@ -57,14 +58,17 @@ function ago(ts: number | undefined): string {
   return `${Math.round(secs / 3600)}h`;
 }
 
+// Column widths are tuned to survive the project rail: the rail took 208px off
+// the pane, and the first pass overflowed into a horizontal scrollbar. Fixed
+// columns stay only where the content genuinely has a fixed width.
 const HEAD: { key: SortKey; label: string; width: string; align?: 'right' }[] = [
-  { key: 'name',     label: 'agent',     width: 'minmax(140px, 1.4fr)' },
-  { key: 'project',  label: 'project',   width: 'minmax(90px, 1fr)' },
-  { key: 'status',   label: 'status',     width: '104px' },
-  { key: 'activity', label: 'doing now',  width: 'minmax(110px, 1.1fr)' },
-  { key: 'context',  label: 'context',    width: '128px' },
-  { key: 'spend',    label: 'spend',      width: '78px', align: 'right' },
-  { key: 'attention',label: 'health',     width: '110px' }
+  { key: 'name',     label: 'agent',     width: 'minmax(120px, 1.5fr)' },
+  { key: 'project',  label: 'project',   width: 'minmax(70px, 0.9fr)' },
+  { key: 'status',   label: 'status',     width: '88px' },
+  { key: 'activity', label: 'doing now',  width: 'minmax(90px, 1.1fr)' },
+  { key: 'context',  label: 'context',    width: 'minmax(96px, 0.9fr)' },
+  { key: 'spend',    label: 'spend',      width: '64px', align: 'right' },
+  { key: 'attention',label: 'health',     width: 'minmax(84px, 0.9fr)' }
 ];
 
 const GRID = HEAD.map((h) => h.width).join(' ');
@@ -74,6 +78,8 @@ export function FleetTable() {
   const selectedId = useStore((s) => s.selectedId);
   const select = useStore((s) => s.select);
   const openInspector = useStore((s) => s.openInspector);
+  const activeProjectId = useStore((s) => s.activeProjectId);
+  const [projects, setProjects] = useState<Project[]>([]);
   const setAddAgentOpen = useStore((s) => s.setAddAgentOpen);
   const { samples, rate, lastTool, breakers } = useFleetTelemetry();
 
@@ -85,9 +91,20 @@ export function FleetTable() {
   // row's "open" affordance, which double-click alone left undiscoverable.
   const [hoverId, setHoverId] = useState<string | null>(null);
 
+  useEffect(() => {
+    let alive = true;
+    window.cth.projectsList?.()
+      .then((list) => { if (alive) setProjects(list ?? []); })
+      .catch(() => { /* hive off — no scoping available */ });
+    return () => { alive = false; };
+  }, [activeProjectId]);
+
+  const scope = projects.find((p) => p.id === activeProjectId) ?? null;
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const scored = agents
+    const inScope = scope ? agentsInProject(agents, scope) : agents;
+    const scored = inScope
       .filter((a) => !a.archived)
       .filter((a) => !q
         || a.name.toLowerCase().includes(q)
@@ -112,7 +129,7 @@ export function FleetTable() {
       const cmp = typeof a === 'string' && typeof b === 'string' ? a.localeCompare(b) : Number(a) - Number(b);
       return desc ? -cmp : cmp;
     });
-  }, [agents, query, onlyAttention, sort, desc, samples, lastTool]);
+  }, [agents, scope, query, onlyAttention, sort, desc, samples, lastTool]);
 
   const needing = agents.filter((a) => !a.archived && (ATTENTION[a.status] ?? 0) >= 70).length;
 
@@ -142,7 +159,7 @@ export function FleetTable() {
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
           color: 'var(--cth-ink-500)'
         }}>
-          {rows.length} of {agents.filter((a) => !a.archived).length}
+          {rows.length} of {(scope ? agentsInProject(agents, scope) : agents).filter((a) => !a.archived).length}
         </span>
 
         <button

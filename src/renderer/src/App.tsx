@@ -4,6 +4,8 @@ import type { HarnessConfig } from '@/store/config';
 import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { FleetTable } from '@/components/FleetTable';
 import { AgentInspector } from '@/components/AgentInspector';
+import { BacklogBoard } from '@/components/BacklogBoard';
+import { ProjectRail } from '@/components/ProjectRail';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
@@ -46,6 +48,7 @@ export function App() {
   const setSidebarWidth = useStore(s => s.setSidebarWidth);
   const ideOpen = useStore(s => s.ideOpen);
   const inspectorId = useStore(s => s.inspectorId);
+  const mainView = useStore(s => s.mainView);
   const inspected = agents.find(a => a.id === inspectorId);
   const setIdeOpen = useStore(s => s.setIdeOpen);
 
@@ -340,8 +343,12 @@ export function App() {
         padding: 16,
         gap: 0
       }}>
+        <ProjectRail />
+
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
-          {inspected ? <AgentInspector agent={inspected} /> : <FleetTable />}
+          {inspected
+            ? <AgentInspector agent={inspected} />
+            : mainView === 'backlog' ? <BacklogBoard /> : <FleetTable />}
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (
