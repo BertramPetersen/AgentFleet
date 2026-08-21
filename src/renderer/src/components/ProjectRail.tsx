@@ -90,16 +90,16 @@ export function ProjectRail() {
         on={mainView === 'backlog'}
         onClick={() => setMainView('backlog')}
       />
-      {needingHuman > 0 && (
-        <RailItem
-          icon="bell"
-          label="Needs you"
-          count={needingHuman}
-          alert
-          on={false}
-          onClick={() => setMainView('backlog')}
-        />
-      )}
+      {/* Always present, even at zero: it is a place you navigate to, and hiding
+          it when the queue empties makes it feel like it moved. */}
+      <RailItem
+        icon="bell"
+        label="Needs you"
+        count={needingHuman}
+        alert={needingHuman > 0}
+        on={mainView === 'needs'}
+        onClick={() => setMainView('needs')}
+      />
 
       <RailHead>Projects</RailHead>
       <RailItem

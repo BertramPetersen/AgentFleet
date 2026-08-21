@@ -5,6 +5,7 @@ import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { FleetTable } from '@/components/FleetTable';
 import { AgentInspector } from '@/components/AgentInspector';
 import { BacklogBoard } from '@/components/BacklogBoard';
+import { NeedsYouInbox } from '@/components/NeedsYouInbox';
 import { ProjectRail } from '@/components/ProjectRail';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
@@ -348,7 +349,9 @@ export function App() {
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
           {inspected
             ? <AgentInspector agent={inspected} />
-            : mainView === 'backlog' ? <BacklogBoard /> : <FleetTable />}
+            : mainView === 'backlog' ? <BacklogBoard />
+              : mainView === 'needs' ? <NeedsYouInbox />
+                : <FleetTable />}
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (
