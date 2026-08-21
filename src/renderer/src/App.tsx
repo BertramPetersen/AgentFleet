@@ -3,6 +3,7 @@ import { useStore, selectedAgent } from '@/store/store';
 import type { HarnessConfig } from '@/store/config';
 import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { FleetTable } from '@/components/FleetTable';
+import { AgentInspector } from '@/components/AgentInspector';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
@@ -44,6 +45,8 @@ export function App() {
   const sidebarWidth = useStore(s => s.sidebarWidth);
   const setSidebarWidth = useStore(s => s.setSidebarWidth);
   const ideOpen = useStore(s => s.ideOpen);
+  const inspectorId = useStore(s => s.inspectorId);
+  const inspected = agents.find(a => a.id === inspectorId);
   const setIdeOpen = useStore(s => s.setIdeOpen);
 
   const [config, setConfig] = useState<HarnessConfig | null>(null);
@@ -338,7 +341,7 @@ export function App() {
         gap: 0
       }}>
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
-          <FleetTable />
+          {inspected ? <AgentInspector agent={inspected} /> : <FleetTable />}
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (
@@ -365,13 +368,18 @@ export function App() {
           )}
         </div>
 
-        <SidebarSplitter
+        {/* The inspector is the full-width view of ONE agent and carries its own
+            terminal, so the sidebar has to go while it is open — otherwise two
+            xterms mount against the same pty and fight over its cols/rows, which
+            corrupts the display for both (the same reason the embedded terminal
+            unmounts under fullscreen). */}
+        {!inspected && <SidebarSplitter
           width={sidebarWidth}
           onChange={setSidebarWidth}
           viewportWidth={vpWidth}
-        />
+        />}
 
-        <div style={{
+        {!inspected && <div style={{
           width: sidebarWidth, flexShrink: 0,
           minHeight: 0, display: 'flex', flexDirection: 'column'
         }}>
@@ -403,8 +411,8 @@ export function App() {
                 color: 'var(--cth-ink-500)'
               }}>NO AGENT SELECTED</div>
               <p style={{ margin: 0, fontSize: 13, textAlign: 'center', color: 'var(--cth-ink-700)' }}>
-                Spawn an agent from the strip below.<br />
-                The terminal and command bar will land here.
+                Pick an agent in the fleet, or spawn one.<br />
+                Its terminal and command bar land here.
               </p>
               <PixelButton variant="secondary" size="md" onClick={() => setAddAgentOpen(true)}>
                 <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
@@ -413,7 +421,7 @@ export function App() {
               </PixelButton>
             </PixelPanel>
           )}
-        </div>
+        </div>}
       </div>
 
       <AgentStrip config={config} />

@@ -114,6 +114,32 @@ const COMMANDS = {
     }, text));
   },
 
+  // React-controlled inputs ignore both keyboard.type() into a focused element
+  // and a plain `el.value = x`: the component's state is the source of truth, so
+  // the value has to go through the property's NATIVE setter and then announce
+  // itself with a bubbling 'input' event for React's onChange to see it.
+  // Usage: fill <css-selector>|<text>
+  async fill(arg) {
+    if (!page) return console.log('ERROR: launch first');
+    const idx = arg.indexOf('|');
+    if (idx < 0) return console.log('usage: fill <css-selector>|<text>');
+    const sel = arg.slice(0, idx).trim();
+    const text = arg.slice(idx + 1);
+    console.log('fill', sel, '→', await page.evaluate(({ sel, text }) => {
+      const el = document.querySelector(sel);
+      if (!el) return 'NOT_FOUND';
+      const proto = el instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      if (!setter) return 'NO_SETTER';
+      el.focus();
+      setter.call(el, text);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      return `OK len=${el.value.length}`;
+    }, { sel, text }));
+  },
+
   async wait(sel) {
     if (!page) return console.log('ERROR: launch first');
     try {
