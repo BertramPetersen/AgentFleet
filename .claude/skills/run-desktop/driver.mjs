@@ -225,7 +225,7 @@ rl.on('line', async (line) => {
   const fn = COMMANDS[cmd];
   if (!fn) { console.log('unknown:', cmd, '— try: help'); return rl.prompt(); }
   try { await fn(rest.join(' ')); } catch (e) { console.log('ERROR:', e.message); }
-  if (cmd === 'quit') { rl.close(); process.exit(0); }
+  if (cmd === 'exit') { rl.close(); process.exit(0); }
   rl.prompt();
 });
 rl.on('close', async () => { await COMMANDS.quit(); process.exit(0); });
