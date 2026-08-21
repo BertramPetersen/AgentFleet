@@ -927,11 +927,6 @@ function Header({ agent }: { agent: Agent }) {
             fullscreen does not change the selection, so leaving the IDE to infer
             its agent would open whichever agent happens to be selected in the
             sidebar rather than the one filling the screen. */}
-        <PixelButton variant="secondary" size="sm" onClick={() => useStore.getState().setIdeOpen(true, agent.id)}>
-          <span title="Open the IDE — file editor + git diff" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Icon name="code" /> IDE
-          </span>
-        </PixelButton>
         {/* Voice toggle is ALWAYS reachable in fullscreen — it controls Michael (the
             god orchestrator) globally, not the agent in view, so users can start a
             voice session even while a worker's terminal fills the screen. The cost

@@ -9,8 +9,7 @@ import { useStore } from '@/store/store';
  * dir, so files outside any workspace still open).
  *
  * v0.3.4: markdown files get an edit | preview toggle (preview is the default
- * when opened from a terminal ⌘-click), plus an "open in IDE" escalation that
- * queues the path for IdePanel and opens it. Preview renders the SAVED file —
+ * when opened from a terminal ⌘-click). Preview renders the SAVED file —
  * switch to edit to change it, save, and the preview picks it up on return.
  */
 export function FullscreenFileEditor() {
@@ -42,16 +41,6 @@ export function FullscreenFileEditor() {
 
   const copyPath = () => {
     navigator.clipboard.writeText(fullscreenFilePath).catch(() => { /* noop */ });
-  };
-
-  const openInIde = () => {
-    const s = useStore.getState();
-    s.setIdeInitialFile(fullscreenFilePath);
-    s.setFullscreenFile(null);
-    // The owning agent is already resolved above (it is how `root` was derived),
-    // so hand it over instead of making the IDE re-guess from the selection —
-    // this overlay is often reached from a terminal link with nothing selected.
-    s.setIdeOpen(true, matchedAgent?.id ?? null);
   };
 
   const chip: React.CSSProperties = {
@@ -108,7 +97,6 @@ export function FullscreenFileEditor() {
               ))}
             </span>
           )}
-          <button onClick={openInIde} title="Open this file in the full IDE" style={chip}>open in IDE</button>
           <button onClick={() => setFullscreenFile(null)} title="Close (Esc)" style={chip}>✕</button>
         </span>
       </div>
