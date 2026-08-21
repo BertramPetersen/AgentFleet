@@ -18,7 +18,6 @@ import { DEFAULT_CONTEXT_TRIGGER, type ContextRule } from '../../../shared/trigg
 import type { AgentProvider } from '../../../shared/agentProvider';
 import { acquireTerminal, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
 import { deliverWithAcknowledgement } from './queueDelivery';
-import { OFFICE_CAST, DEFAULT_CHARACTER } from '@/scene/office/cast';
 
 const GOD_ID = 'god';
 /** Accent palette for MAIN-spawned (voice-hired) agents — picked deterministically
@@ -355,7 +354,6 @@ export function useHive(config: HarnessConfig | null): void {
       const god: Agent = {
         id: GOD_ID,
         name: 'Michael',
-        character: 'michael',
         accent: 'lemon',
         description: 'god — runs the floor, triages requests, escalates only critical calls to you',
         project: 'hive',
@@ -893,17 +891,12 @@ export function useHive(config: HarnessConfig | null): void {
       if (!rec?.id) return;
       // addAgent is idempotent, but bail early if the renderer already carded it.
       if (useStore.getState().agents.some((a) => a.id === rec.id)) return;
-      const key = (rec.name || rec.id).toLowerCase();
-      const character =
-        OFFICE_CAST.find((m) => m.name === key || m.displayName.toLowerCase() === key)?.name ??
-        DEFAULT_CHARACTER;
       let h = 0;
       for (const ch of rec.id) h = (h + ch.charCodeAt(0)) % SPAWN_ACCENTS.length;
       const project = (rec.cwd || '').split(/[\\/]/).filter(Boolean).pop() || 'hive';
       const agent: Agent = {
         id: rec.id,
         name: rec.name || rec.id,
-        character,
         accent: SPAWN_ACCENTS[h],
         description: rec.role || 'a fresh harness',
         project,

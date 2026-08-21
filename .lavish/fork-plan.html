@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="en" data-theme="luxury">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentFleet — forking Munder Difflin into a productivity tool</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, h4, li, dd, td, th, .badge) { overflow-wrap: anywhere; }
+  :where(img, svg, video, canvas) { max-width: 100%; height: auto; }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif; }
+
+  /* ── page chrome ───────────────────────────────────────────────── */
+  .fp-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 96px; }
+  .fp-rule { height: 1px; background: color-mix(in oklab, currentColor 12%, transparent); margin: 56px 0 40px; }
+  .fp-eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .55; font-weight: 600; }
+  .fp-h2 { font-size: 27px; font-weight: 700; letter-spacing: -.02em; margin: 6px 0 10px; }
+  .fp-lede { font-size: 15px; line-height: 1.6; opacity: .78; max-width: 76ch; }
+  .fp-note { font-size: 12.5px; opacity: .6; line-height: 1.55; }
+  .fp-ev { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; opacity: .62; }
+  .fp-scroll { overflow-x: auto; padding-bottom: 4px; }
+
+  .fp-nav { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(10px);
+            background: color-mix(in oklab, var(--color-base-100) 88%, transparent);
+            border-bottom: 1px solid color-mix(in oklab, currentColor 12%, transparent); }
+  .fp-nav a { font-size: 12.5px; opacity: .68; text-decoration: none; white-space: nowrap; }
+  .fp-nav a:hover { opacity: 1; }
+
+  /* ── mock product UI: the proposed design system ────────────────── */
+  .mk {
+    --bg:#0d1117; --s1:#141a21; --s2:#1a222b; --s3:#212a35; --bd:#2a3441; --bd2:#3a4654;
+    --tx:#e7ebf0; --dim:#95a2b3; --dim2:#6d7a89;
+    --acc:#f4d35e;            /* brand thread, kept from the fork */
+    --link:#6c8ef5; --ok:#5fc98a; --warn:#ffb84d; --err:#ff6b6b; --think:#4ecdc4; --purple:#9b7ede;
+    background: var(--bg); color: var(--tx); border: 1px solid var(--bd);
+    border-radius: 10px; overflow: hidden;
+    font-size: 12.5px; line-height: 1.45;
+    box-shadow: 0 18px 48px -18px rgba(0,0,0,.8);
+  }
+  .mk-bar { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--s1); border-bottom:1px solid var(--bd); }
+  .mk-dots { display:flex; gap:6px; }
+  .mk-dots i { width:9px; height:9px; border-radius:50%; background:var(--bd2); display:block; }
+  .mk-bar b { font-size:11.5px; font-weight:600; letter-spacing:.02em; color:var(--dim); }
+  .mk-bar .mk-crumb { font-size:11.5px; color:var(--dim2); }
+  .mk-min { min-width: 940px; }
+
+  .mk-rail { width:186px; flex:0 0 186px; background:var(--s1); border-right:1px solid var(--bd); padding:10px 8px; }
+  .mk-railhead { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim2); padding:8px 8px 5px; }
+  .mk-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; color:var(--dim); cursor:default; }
+  .mk-item.on { background:var(--s3); color:var(--tx); }
+  .mk-item .mk-count { margin-left:auto; font-size:10.5px; color:var(--dim2); font-variant-numeric:tabular-nums; }
+  .mk-item .mk-count.alert { color:var(--err); }
+  .mk-dotp { width:7px; height:7px; border-radius:50%; flex:0 0 7px; }
+
+  .mk-main { flex:1 1 auto; min-width:0; }
+  .mk-toolbar { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--bd); }
+  .mk-title { font-size:14px; font-weight:650; letter-spacing:-.01em; }
+  .mk-btn { border:1px solid var(--bd2); background:var(--s2); color:var(--tx); border-radius:6px; padding:4px 9px; font-size:11.5px; }
+  .mk-btn.pri { background:var(--acc); border-color:var(--acc); color:#231d05; font-weight:650; }
+  .mk-btn.gh { background:transparent; border-color:transparent; color:var(--dim); }
+  .mk-input { flex:1 1 auto; min-width:60px; background:var(--s2); border:1px solid var(--bd); border-radius:6px; padding:4px 9px; color:var(--dim2); font-size:11.5px; }
+
+  .mk-group { display:flex; align-items:center; gap:8px; padding:7px 14px; background:var(--s1);
+              border-top:1px solid var(--bd); border-bottom:1px solid var(--bd);
+              font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim2); }
+  .mk-row { display:grid; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid color-mix(in oklab, #2a3441 55%, transparent); }
+  .mk-row:hover { background:var(--s1); }
+  .mk-row.sel { background:var(--s2); box-shadow: inset 2px 0 0 var(--acc); }
+  .mk-key { font-family:ui-monospace,Menlo,monospace; font-size:11px; color:var(--dim2); }
+  .mk-tt { font-weight:520; }
+  .mk-sub { font-size:11px; color:var(--dim2); }
+
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:1px 7px; border-radius:999px;
+          font-size:10.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap;
+          border:1px solid var(--bd2); color:var(--dim); }
+  .pill i { width:6px; height:6px; border-radius:50%; display:block; background:currentColor; }
+  .pill.work { color:#ffd93d; border-color:#5c4f1a; background:#241f08; }
+  .pill.think{ color:#4ecdc4; border-color:#1d4a47; background:#07211f; }
+  .pill.block{ color:#ff8a8a; border-color:#5c2626; background:#260c0c; }
+  .pill.done { color:#5fc98a; border-color:#1f4a33; background:#082115; }
+  .pill.idle { color:#95a2b3; border-color:#333d49; background:#141a21; }
+  .pill.wait { color:#8fa9f7; border-color:#2b3768; background:#0c1129; }
+  .pill.loop { color:#ffb84d; border-color:#5c421a; background:#231a08; }
+
+  .who { display:inline-flex; align-items:center; gap:6px; }
+  .av { width:18px; height:18px; border-radius:5px; display:grid; place-items:center;
+        font-size:9.5px; font-weight:700; color:#0d1117; letter-spacing:-.02em; flex:0 0 18px; }
+  .chip { display:inline-block; padding:0 6px; border-radius:4px; border:1px solid var(--bd2);
+          font-size:10.5px; color:var(--dim); font-family:ui-monospace,Menlo,monospace; }
+
+  .meter { height:4px; border-radius:2px; background:var(--s3); overflow:hidden; }
+  .meter > span { display:block; height:100%; }
+
+  .mk-side { width:288px; flex:0 0 288px; border-left:1px solid var(--bd); background:var(--s1); padding:12px 13px; }
+  .mk-sh { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim2); margin:14px 0 6px; }
+  .mk-sh:first-child { margin-top:0; }
+  .mk-field { background:var(--s2); border:1px solid var(--bd); border-radius:6px; padding:7px 8px; color:var(--dim); font-size:11.5px; }
+
+  .term { background:#080b0f; border:1px solid var(--bd); border-radius:7px; padding:9px 10px;
+          font-family:ui-monospace,Menlo,monospace; font-size:11px; line-height:1.6; color:#b9c4d1; overflow:hidden; }
+  .term .g { color:#5fc98a; } .term .y { color:#ffd93d; } .term .d { color:#5d6a78; } .term .r { color:#ff8a8a; } .term .b { color:#8fa9f7; }
+
+  .span-row { display:grid; grid-template-columns: 76px 1fr 52px; gap:8px; align-items:center; padding:3px 0; }
+  .span-bar { height:9px; border-radius:2px; background:var(--s3); position:relative; }
+  .span-bar > span { position:absolute; top:0; bottom:0; border-radius:2px; }
+
+  .dv { font-family:ui-monospace,Menlo,monospace; font-size:11px; line-height:1.65; }
+  .dl { display:grid; grid-template-columns:38px 1fr; gap:0; }
+  .dl > i { color:#4c5765; text-align:right; padding-right:10px; font-style:normal; }
+  .dl > span { padding-left:8px; white-space:pre; overflow:hidden; text-overflow:ellipsis; }
+  .dl.add > span { background:#0c2417; color:#9fe7bd; }
+  .dl.del > span { background:#2a1013; color:#ffb3b3; }
+  .dl.hunk > span { color:#8fa9f7; background:#0e1424; }
+  .tree { line-height:1.9; }
+  .tree div { color:#95a2b3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tree div.on { color:#e7ebf0; background:#212a35; border-radius:4px; padding-left:4px; margin-left:-4px; }
+  .stat-a { color:#5fc98a; } .stat-d { color:#ff8a8a; }
+
+  /* ── keep/strip/build + risk cards ─────────────────────────────── */
+  .fp-cards { display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+  .fp-card { border:1px solid color-mix(in oklab, currentColor 14%, transparent); border-radius:10px; padding:15px 16px; background: color-mix(in oklab, var(--color-base-200) 60%, transparent); }
+  .fp-card h4 { font-size:13.5px; font-weight:680; margin:0 0 6px; }
+  .fp-card p { font-size:12.5px; line-height:1.55; opacity:.75; margin:0; }
+  .fp-tag { display:inline-block; font-size:10px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:4px; margin-bottom:8px; }
+  .fp-tag.keep { background:#0f3a26; color:#7ee2a8; }
+  .fp-tag.strip { background:#3d1717; color:#ffa1a1; }
+  .fp-tag.build { background:#3a3208; color:#f4d35e; }
+
+  table.fp-t { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.fp-t th { text-align:left; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; opacity:.55; padding:0 12px 8px; font-weight:700; white-space:nowrap; }
+  table.fp-t td { padding:9px 12px; border-top:1px solid color-mix(in oklab, currentColor 12%, transparent); vertical-align:top; line-height:1.5; }
+  table.fp-t code { font-size:11.5px; }
+  .num { font-variant-numeric: tabular-nums; white-space:nowrap; }
+
+  pre.fp-code { background:#0d1117; color:#e7ebf0; border:1px solid #2a3441; border-radius:9px;
+                padding:13px 15px; overflow-x:auto; font-size:11.5px; line-height:1.65;
+                font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre.fp-code .c { color:#6d7a89; } pre.fp-code .k { color:#9b7ede; } pre.fp-code .s { color:#5fc98a; }
+  pre.fp-code .n { color:#f4d35e; } pre.fp-code .add { color:#5fc98a; } pre.fp-code .del { color:#ff8a8a; }
+
+  .mermaid { background: color-mix(in oklab, var(--color-base-200) 55%, transparent);
+             border:1px solid color-mix(in oklab, currentColor 12%, transparent);
+             border-radius:10px; padding:14px; overflow-x:auto; }
+
+  .fp-q { border:1px solid color-mix(in oklab, currentColor 16%, transparent); border-radius:10px; padding:16px 18px; }
+  .fp-q legend { font-size:13px; font-weight:700; padding:0 6px; }
+  .fp-opt { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:8px; cursor:pointer; }
+  .fp-opt:hover { background: color-mix(in oklab, currentColor 7%, transparent); }
+  .fp-opt input { margin-top:3px; flex:0 0 auto; }
+  .fp-opt b { font-weight:620; font-size:12.5px; }
+  .fp-opt span { display:block; font-size:11.5px; opacity:.65; line-height:1.5; }
+  .fp-rec { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#f4d35e; margin-left:6px; }
+  .fp-qstate { font-size:11.5px; opacity:.6; }
+</style>
+</head>
+<body class="bg-base-100 text-base-content">
+
+<!-- ══════════════════ nav ══════════════════ -->
+<div class="fp-nav">
+  <div class="fp-wrap" style="padding-bottom:0">
+    <div class="flex items-center gap-4 overflow-x-auto py-3">
+      <span class="font-bold text-sm whitespace-nowrap">AgentFleet <span class="opacity-40 font-normal">/ fork plan</span></span>
+      <span class="opacity-20">|</span>
+      <a href="#today">Today</a>
+      <a href="#seam">The seam</a>
+      <a href="#inventory">Keep · Strip · Build</a>
+      <a href="#surfaces">Proposed UI</a>
+      <a href="#model">Data model</a>
+      <a href="#steer">Intervention</a>
+      <a href="#plan">Delivery</a>
+      <a href="#risks">Risks</a>
+      <a href="#decide" class="!opacity-100 font-semibold" style="color:#f4d35e">Decided →</a>
+    </div>
+  </div>
+</div>
+
+<div class="fp-wrap">
+
+<!-- ══════════════════ hero ══════════════════ -->
+<header style="padding:52px 0 8px">
+  <div class="fp-eyebrow">Fork proposal · munder-difflin @ 57a6ce6 · v0.4.4</div>
+  <h1 style="font-size:40px; font-weight:760; letter-spacing:-.03em; line-height:1.1; margin:12px 0 16px; max-width:22ch">
+    Keep the orchestration engine. Delete the office.
+  </h1>
+  <p class="fp-lede" style="font-size:16.5px">
+    Munder Difflin is two products in one repo: a <strong>19,000-line multi-agent orchestration core</strong> that runs
+    real CLI agents in real PTYs with memory, mailboxes, telemetry and operator control — and a <strong>5,400-line
+    Pixi.js game</strong> that draws it as sprites walking around a paper company. The core is the reason to fork.
+    The game is what we replace with projects, backlogs, and a supervision surface.
+  </p>
+  <p class="fp-note" style="margin-top:14px; max-width:76ch">
+    The load-bearing finding of this review: <strong>the two halves do not know about each other.</strong>
+    Nothing in <code>src/main</code> references a character, seat, or desk — the game exists entirely
+    renderer-side, behind one typed IPC bridge. A new frontend is an additive project, not a rewrite.
+  </p>
+
+  <div class="grid gap-3 mt-8" style="grid-template-columns: repeat(auto-fit, minmax(min(100%,190px), 1fr))">
+    <div class="fp-card" style="padding:14px 15px">
+      <div class="fp-eyebrow">Keep</div>
+      <div class="num" style="font-size:26px; font-weight:720; letter-spacing:-.02em">19,197</div>
+      <div class="fp-note">lines in <code>src/main</code> — engine, UI-agnostic</div>
+    </div>
+    <div class="fp-card" style="padding:14px 15px">
+      <div class="fp-eyebrow">Strip</div>
+      <div class="num" style="font-size:26px; font-weight:720; letter-spacing:-.02em; color:#ff8a8a">5,382</div>
+      <div class="fp-note">lines in <code>scene/office</code> + 304 KB of sprites</div>
+    </div>
+    <div class="fp-card" style="padding:14px 15px">
+      <div class="fp-eyebrow">Rebuild</div>
+      <div class="num" style="font-size:26px; font-weight:720; letter-spacing:-.02em">~19k</div>
+      <div class="fp-note">lines of renderer components, selectively</div>
+    </div>
+    <div class="fp-card" style="padding:14px 15px">
+      <div class="fp-eyebrow">Coupling found</div>
+      <div class="num" style="font-size:26px; font-weight:720; letter-spacing:-.02em; color:#5fc98a">0</div>
+      <div class="fp-note">game references in the main process</div>
+    </div>
+  </div>
+  <p class="fp-ev" style="margin-top:10px">
+    grep -c "character\|seat\|desk-" src/main/index.ts → 0 · matches elsewhere in src/main are the word
+    "metacharacter" in <code>pty.ts</code>/<code>cliInstall.ts</code>
+  </p>
+
+  <div class="fp-card" style="margin-top:26px; border-color:#3a3208; background:rgba(58,50,8,.28)">
+    <div class="fp-eyebrow" style="color:#f4d35e; opacity:1">Decided in review · this plan reflects it</div>
+    <div class="grid gap-x-8 gap-y-3 mt-3" style="grid-template-columns: repeat(auto-fit, minmax(min(100%,215px), 1fr)); font-size:12.5px">
+      <div><strong>AgentFleet</strong><br><span style="opacity:.6">product name</span></div>
+      <div><strong>Electron desktop</strong><br><span style="opacity:.6">single machine, no daemon</span></div>
+      <div><strong>Tracked fork</strong><br><span style="opacity:.6">own the renderer, rebase the engine</span></div>
+      <div><strong>Hybrid assignment</strong><br><span style="opacity:.6">rules in main + LLM dispatcher</span></div>
+      <div><strong>Backlog stays in the hive</strong><br><span style="opacity:.6">projects.json + additive task fields</span></div>
+      <div><strong>Fleet first</strong><br><span style="opacity:.6">then inspector, backlog, needs-you</span></div>
+      <div><strong>Keep the built-in IDE</strong><br><span style="opacity:.6">editor, file tree and git rails</span></div>
+    </div>
+    <p class="fp-note" style="margin-top:12px">
+      Seven decisions settled, including keeping the built-in IDE. One approval outstanding — start P0, at the
+      <a href="#decide" style="color:#f4d35e">bottom of the page</a>.
+    </p>
+  </div>
+</header>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ today ══════════════════ -->
+<section id="today">
+  <div class="fp-eyebrow">1 · Current state</div>
+  <h2 class="fp-h2">What the product is today</h2>
+  <p class="fp-lede">
+    Every agent is a real CLI process in a PTY, and every agent is also an avatar. The floor is the primary
+    navigation surface: you click a sprite to select an agent, and a right-hand panel gives you its terminal.
+  </p>
+
+  <div class="grid gap-5 mt-6" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr))">
+    <figure style="margin:0">
+      <img src="current-floor.png" alt="Munder Difflin's current UI: a pixel-art office floor with avatars at desks, a terminal panel on the right, and a strip of agent cards along the bottom"
+           style="border-radius:10px; border:1px solid rgba(255,255,255,.12); display:block">
+      <figcaption class="fp-note" style="margin-top:8px">
+        The shipped UI. Source: <code>docs/media/home-screen.png</code>.
+      </figcaption>
+    </figure>
+    <div>
+      <table class="fp-t">
+        <thead><tr><th>What you see</th><th>What it actually is</th></tr></thead>
+        <tbody>
+          <tr><td>Sprites at desks</td><td>One <code>node-pty</code> process per avatar, 10 supported CLIs</td></tr>
+          <tr><td>Avatar walks to a station</td><td>A <code>PreToolUse</code> hook payload over a Unix socket</td></tr>
+          <tr><td>Envelope flies desk&nbsp;→&nbsp;desk</td><td>Router moved a JSON file from one agent's <code>outbox/</code> to another's <code>inbox/</code></td></tr>
+          <tr><td>Michael in the corner office</td><td>The "god" orchestrator — an ordinary CLI agent with a very long system prompt</td></tr>
+          <tr><td>Speech bubbles, cafeteria lines</td><td>Decoration. No signal.</td></tr>
+          <tr><td>Bottom card strip</td><td>The only fleet-wide view: 6 agents visible, no sort, no filter</td></tr>
+        </tbody>
+      </table>
+      <p class="fp-note" style="margin-top:12px">
+        A "Command Center" panel already holds 11 tabs — terminal, tasks, ask-me, triggers, memory, activity,
+        skills, workers — including a dependency-aware kanban (<code>TasksKanban.tsx</code>, 466 lines). The
+        productivity product is <em>half-built and buried behind the game</em>. That is the opportunity.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ seam ══════════════════ -->
+<section id="seam">
+  <div class="fp-eyebrow">2 · Architecture</div>
+  <h2 class="fp-h2">The seam we fork on</h2>
+  <p class="fp-lede">
+    Two data planes feed one renderer through a single typed bridge (<code>window.cth</code>,
+    <code>src/preload/index.ts</code>, 1,379 lines). Everything the game draws, it draws from that bridge — so a
+    second frontend consumes the same API with no engine changes.
+  </p>
+
+  <div class="mermaid" style="margin-top:20px">
+flowchart TD
+  CLI["10 agent CLIs in PTYs<br/>claude · codex · agy · grok · kimi · qwen · opencode · crush · pi · copilot"]
+  CLI -- "raw bytes" --> PTY
+  CLI -- "hook payloads (unix socket)" --> HOOK
+
+  subgraph MAIN["Electron main — KEEP · 19,197 lines"]
+    direction TB
+    PTY["PtyManager<br/>spawn · write · resize · kill"]
+    HOOK["HookServer<br/>PreToolUse · Stop · Notification"]
+    HIVE["HiveManager<br/>registry.json · tasks.json · mailboxes<br/>single-committer git"]
+    CTRL["ControlRegistry<br/>pause · gate-tool · steer · halt"]
+    TEL["Telemetry · CircuitBreaker · cost ledger<br/>fleet.json every 8s"]
+    HOOK --> HIVE
+    HOOK --> CTRL
+    HOOK --> TEL
+  end
+
+  MAIN --> BR["window.cth — typed IPC bridge<br/>src/preload/index.ts"]
+  BR --> OLD["Pixi office floor<br/>STRIP · 5,382 lines"]
+  BR --> NEW["Projects · Backlog · Fleet · Inspector<br/>BUILD"]
+
+  style OLD fill:#3d1717,stroke:#ff8a8a,color:#ffd9d9
+  style NEW fill:#3a3208,stroke:#f4d35e,color:#fff3c4
+  style BR fill:#0c1129,stroke:#8fa9f7,color:#dce4ff
+  </div>
+
+  <div class="fp-cards" style="margin-top:20px">
+    <div class="fp-card">
+      <h4>The engine is already headless</h4>
+      <p>Slack messages, generic webhooks, scheduled missions and an adaptive heartbeat all drive agents with no
+      UI involved. The floor is a viewer, not a controller.</p>
+      <p class="fp-ev" style="margin-top:8px">src/main/slack.ts · webhook.ts · index.ts (missions)</p>
+    </div>
+    <div class="fp-card">
+      <h4>Operator control rides the hook protocol</h4>
+      <p>Pause and tool-gating return <code>permissionDecision:'deny'</code> from <code>PreToolUse</code>; guidance
+      returns <code>additionalContext</code>; a clean stop returns <code>{continue:false}</code>. No keystrokes,
+      no interrupts.</p>
+      <p class="fp-ev" style="margin-top:8px">src/main/control.ts</p>
+    </div>
+    <div class="fp-card">
+      <h4>One writer owns the prompt line</h4>
+      <p>Exactly one drain loop may type into a live agent's terminal, gated on idle status, boot grace, and
+      whether you have unsent text. Any new UI enqueues; it never writes.</p>
+      <p class="fp-ev" style="margin-top:8px">docs/message-queue.md · hooks/useHive.ts effect #4</p>
+    </div>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ inventory ══════════════════ -->
+<section id="inventory">
+  <div class="fp-eyebrow">3 · Inventory</div>
+  <h2 class="fp-h2">Keep, strip, build</h2>
+  <p class="fp-lede">Line counts are measured, not estimated. "Port" means the logic is right but the presentation is pixel-art and gets restyled.</p>
+
+  <div class="fp-scroll" style="margin-top:18px">
+    <table class="fp-t" style="min-width:720px">
+      <thead><tr><th>Verdict</th><th>Area</th><th class="num">Lines</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="fp-tag keep">Keep as-is</span></td>
+          <td><code>src/main/**</code> — pty, hive, hooks, control, breaker, telemetry, memory, git, slack, webhook, updater</td>
+          <td class="num">19,197</td>
+          <td>The product we are forking for. Zero UI coupling. Track upstream here.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag keep">Keep as-is</span></td>
+          <td><code>src/preload/**</code> + <code>src/shared/**</code></td>
+          <td class="num">5,170</td>
+          <td>The API contract and provider presets. Extend additively for projects.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag strip">Delete</span></td>
+          <td><code>src/renderer/src/scene/**</code> — OfficeFloor, Character, Camera, cast, pathfinding, envelopes, bubbles, tilemaps</td>
+          <td class="num">5,382</td>
+          <td>The game. Also removes the Pixi.js dependency.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag strip">Delete</span></td>
+          <td><code>assets/</code> tilesets + character sheets · <code>OfficeThemePicker</code> · <code>SpritePortrait</code> · <code>mockEvents.ts</code></td>
+          <td class="num">495 + 304&nbsp;KB</td>
+          <td><strong>Clears the LimeZu non-commercial asset licence</strong> — see risks.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag strip">Rewrite</span></td>
+          <td><code>design/tokens.css</code> · <code>PixelPanel</code> / <code>PixelButton</code> / <code>PixelBadge</code> · <code>DESIGN.md</code></td>
+          <td class="num">~810</td>
+          <td>Press Start 2P and "never bold" are hard constraints against a dense tool. New token set.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag build">Port</span></td>
+          <td><code>TasksKanban</code> · <code>AskMeTab</code> · <code>ToolWaterfall</code> · <code>ThreadsPanel</code> · <code>MessageQueueComposer</code> · <code>WorkersTab</code></td>
+          <td class="num">1,877</td>
+          <td>Right logic, wrong skin. These become the backlog, inbox and inspector.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag build">Port</span></td>
+          <td><code>hooks/useHive.ts</code> · <code>terminalPool</code> · <code>PtyTerminalView</code></td>
+          <td class="num">2,269</td>
+          <td>useHive is the client-side orchestration loop — 16 effects of hard-won lifecycle handling. Do not rewrite it; lift it out of the floor's assumptions.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag keep">Keep · your call</span></td>
+          <td><code>ide/**</code> — Monaco editor, file tree, tabs, save · <code>components/git/**</code> — commit graph, diffs, branch compare, guarded checkout</td>
+          <td class="num">1,838</td>
+          <td>Kept whole and restyled. The fs/git access is already brokered through main, so this ports without engine changes.</td>
+        </tr>
+        <tr>
+          <td><span class="fp-tag build">New</span></td>
+          <td>App shell · project switcher · backlog board · fleet table · agent inspector · needs-you inbox</td>
+          <td class="num">—</td>
+          <td>The four surfaces below.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ surfaces ══════════════════ -->
+<section id="surfaces">
+  <div class="fp-eyebrow">4 · The proposal</div>
+  <h2 class="fp-h2">Five surfaces, mocked</h2>
+  <p class="fp-lede">
+    These are drawn in the design system I am proposing for the fork: dense dark neutrals, one accent kept from the
+    brand, and the existing status colour semantics preserved (working amber, thinking teal, blocked red, waiting
+    blue) so the information design survives the sprite deletion. Each mock lists the IPC calls that already feed it.
+  </p>
+
+  <!-- ─── A: projects & backlog ─── -->
+  <h3 style="font-size:17px; font-weight:700; margin:34px 0 4px">A · Projects &amp; backlog <span style="opacity:.4; font-weight:400">— where work is defined</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
+    Projects are first-class and own a repo path; the backlog is the existing task ledger with a project, a rank, and
+    a structured dispatch contract. Assigning a card to an agent is what the orchestrator does today by writing an
+    <code>assignee</code> — here you can do it directly, or hand the whole column to the dispatcher.
+  </p>
+
+  <div class="fp-scroll">
+  <div class="mk mk-min">
+    <div class="mk-bar"><span class="mk-dots"><i></i><i></i><i></i></span><b>AgentFleet</b><span class="mk-crumb">· pricing-engine · backlog</span></div>
+    <div style="display:flex">
+      <!-- rail -->
+      <div class="mk-rail">
+        <div class="mk-railhead">Workspace</div>
+        <div class="mk-item"><span>◵</span> Fleet <span class="mk-count">7</span></div>
+        <div class="mk-item"><span>✦</span> Needs you <span class="mk-count alert">3</span></div>
+        <div class="mk-item"><span>≡</span> Activity</div>
+        <div class="mk-railhead">Projects</div>
+        <div class="mk-item on"><span class="mk-dotp" style="background:#f4d35e"></span> pricing-engine <span class="mk-count">12</span></div>
+        <div class="mk-item"><span class="mk-dotp" style="background:#4ecdc4"></span> trade-capture <span class="mk-count">8</span></div>
+        <div class="mk-item"><span class="mk-dotp" style="background:#9b7ede"></span> risk-reports <span class="mk-count">5</span></div>
+        <div class="mk-item"><span class="mk-dotp" style="background:#5fc98a"></span> internal-tools <span class="mk-count">3</span></div>
+        <div class="mk-item" style="color:#6d7a89"><span>+</span> New project</div>
+        <div class="mk-railhead">Unassigned</div>
+        <div class="mk-item"><span>⌸</span> Intake <span class="mk-count">6</span></div>
+      </div>
+
+      <!-- board -->
+      <div class="mk-main">
+        <div class="mk-toolbar">
+          <span class="mk-title">pricing-engine</span>
+          <span class="chip">~/repos/pricing-engine</span>
+          <span class="chip">worktree per agent</span>
+          <span class="mk-input">Filter backlog…</span>
+          <button class="mk-btn">Group: status ▾</button>
+          <button class="mk-btn pri">+ Task</button>
+        </div>
+
+        <div class="mk-group"><span class="mk-dotp" style="background:#ffd93d"></span> In progress · 2</div>
+
+        <div class="mk-row sel" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px">
+          <span class="mk-key">PE-118</span>
+          <span><span class="mk-tt">Backfill forward curves for 2019–2021 and reconcile against EOD snapshots</span>
+                <span class="mk-sub">contract set · 2 dependents</span></span>
+          <span class="pill work"><i></i>working</span>
+          <span class="who"><span class="av" style="background:#f4d35e">I1</span> impl-1 <span class="mk-sub">· 41m</span></span>
+          <span class="mk-sub">Bash · 0.8s ago</span>
+          <span class="mk-sub num">$4.12</span>
+        </div>
+
+        <div class="mk-row" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px">
+          <span class="mk-key">PE-121</span>
+          <span><span class="mk-tt">Property-test the interpolation kernel against the legacy implementation</span>
+                <span class="mk-sub">blocked-by PE-118</span></span>
+          <span class="pill think"><i></i>thinking</span>
+          <span class="who"><span class="av" style="background:#4ecdc4">T1</span> test-1 <span class="mk-sub">· 6m</span></span>
+          <span class="mk-sub">Read · 2s ago</span>
+          <span class="mk-sub num">$0.36</span>
+        </div>
+
+        <div class="mk-group"><span class="mk-dotp" style="background:#ff6b6b"></span> Blocked on you · 1</div>
+
+        <div class="mk-row" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px">
+          <span class="mk-key">PE-109</span>
+          <span><span class="mk-tt">Point the nightly job at the new curve service</span>
+                <span class="mk-sub" style="color:#ff8a8a">asked 2h ago: "which service account should the job use in prod?"</span></span>
+          <span class="pill block"><i></i>needs you</span>
+          <span class="who"><span class="av" style="background:#f4d35e">I1</span> impl-1</span>
+          <span class="mk-sub">—</span>
+          <span class="mk-sub num">$1.90</span>
+        </div>
+
+        <div class="mk-group"><span class="mk-dotp" style="background:#95a2b3"></span> Ready · 4 <span style="margin-left:auto; text-transform:none; letter-spacing:0">drag to rank · ⌘↵ dispatch</span></div>
+
+        <div class="mk-row" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px">
+          <span class="mk-key">PE-124</span>
+          <span><span class="mk-tt">Cache the volatility surface between requests</span><span class="mk-sub">no contract yet</span></span>
+          <span class="pill idle"><i></i>ready</span>
+          <span class="mk-sub">unassigned</span><span class="mk-sub">—</span><span class="mk-sub num">—</span>
+        </div>
+        <div class="mk-row" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px">
+          <span class="mk-key">PE-125</span>
+          <span><span class="mk-tt">Document the curve-service API surface</span></span>
+          <span class="pill idle"><i></i>ready</span>
+          <span class="who"><span class="av" style="background:#9b7ede">D1</span> docs-1</span><span class="mk-sub">—</span><span class="mk-sub num">—</span>
+        </div>
+        <div class="mk-row" style="grid-template-columns: 62px 1fr 92px 120px 96px 58px; opacity:.55">
+          <span class="mk-key">PE-096</span>
+          <span><span class="mk-tt">Replace the hand-rolled date arithmetic</span></span>
+          <span class="pill done"><i></i>done</span>
+          <span class="who"><span class="av" style="background:#4ecdc4">T1</span> test-1</span><span class="mk-sub">2d ago</span><span class="mk-sub num">$2.44</span>
+        </div>
+      </div>
+
+      <!-- detail -->
+      <div class="mk-side">
+        <div class="mk-sh">PE-118 · dispatch contract</div>
+        <div class="mk-field" style="line-height:1.6">
+          <div style="color:#f4d35e; font-size:10px; letter-spacing:.1em">OBJECTIVE</div>
+          Backfill 2019–2021 forward curves into <code>curve_store</code> and reconcile totals against EOD snapshots.
+          <div style="color:#f4d35e; font-size:10px; letter-spacing:.1em; margin-top:8px">OUTPUT</div>
+          A migration script + a reconciliation report with per-day deltas.
+          <div style="color:#f4d35e; font-size:10px; letter-spacing:.1em; margin-top:8px">TOOLS</div>
+          Read <code>docs/curves.md</code> first. Do not call the vendor API.
+          <div style="color:#f4d35e; font-size:10px; letter-spacing:.1em; margin-top:8px">BOUNDARIES</div>
+          Staging only. Done = deltas &lt; 1bp on every day.
+        </div>
+        <div class="mk-sh">Assignee</div>
+        <div class="mk-field who"><span class="av" style="background:#f4d35e">I1</span> impl-1 · claude · opus
+          <span style="margin-left:auto; color:#6d7a89">change</span></div>
+        <div class="mk-sh">Dependents</div>
+        <div class="mk-field" style="line-height:1.7">
+          <div>PE-121 <span style="color:#6d7a89">property tests</span></div>
+          <div>PE-109 <span style="color:#6d7a89">nightly cutover</span></div>
+        </div>
+        <div class="mk-sh">Spend</div>
+        <div class="mk-field">
+          <div class="flex" style="display:flex; justify-content:space-between"><span>$4.12</span><span style="color:#6d7a89">of $15.00</span></div>
+          <div class="meter" style="margin-top:6px"><span style="width:27%; background:#5fc98a"></span></div>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:14px">
+          <button class="mk-btn pri" style="flex:1">Open agent →</button>
+          <button class="mk-btn">Reassign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="fp-ev" style="margin-top:9px">
+    wired to: <code>hiveTasks()</code> · <code>hiveAddTask()</code> · <code>hivePatchTask()</code> ·
+    <code>hiveRegistry()</code> · <code>telemetrySnapshot()</code> · new <code>projects:list/upsert</code>
+  </p>
+
+  <!-- ─── B: fleet ─── -->
+  <h3 style="font-size:17px; font-weight:700; margin:38px 0 4px">B · Fleet <span style="opacity:.4; font-weight:400">— is everyone on track?</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
+    Every column here already exists in <code>fleet.json</code>, which the main process rewrites every 8 seconds, or
+    in the telemetry collector. Today only the orchestrator agent reads it; a human never sees it. This is the single
+    highest-value screen in the fork, and it is nearly free.
+  </p>
+
+  <div class="fp-scroll">
+  <div class="mk mk-min">
+    <div class="mk-bar"><span class="mk-dots"><i></i><i></i><i></i></span><b>AgentFleet</b><span class="mk-crumb">· fleet</span></div>
+    <div class="mk-toolbar">
+      <span class="mk-title">Fleet</span>
+      <span class="pill work" style="border-radius:6px"><i></i>3 working</span>
+      <span class="pill wait" style="border-radius:6px"><i></i>1 waiting</span>
+      <span class="pill block" style="border-radius:6px"><i></i>1 needs you</span>
+      <span class="pill idle" style="border-radius:6px"><i></i>2 idle</span>
+      <span class="mk-input">All projects ▾</span>
+      <button class="mk-btn">Pause deliveries</button>
+      <button class="mk-btn pri">+ Agent</button>
+    </div>
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px; background:#141a21; border-bottom:1px solid #2a3441">
+      <span class="mk-sub">Agent</span><span class="mk-sub">Project</span><span class="mk-sub">Status</span>
+      <span class="mk-sub">Doing now</span><span class="mk-sub">Context</span><span class="mk-sub">Spend</span>
+      <span class="mk-sub">Inbox</span><span class="mk-sub">Health</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px">
+      <span class="who"><span class="av" style="background:#f4d35e">DP</span> <span><span class="mk-tt">dispatcher</span><span class="mk-sub">claude · opus</span></span></span>
+      <span class="mk-sub">— all —</span>
+      <span class="pill think"><i></i>routing</span>
+      <span class="mk-sub">Read tasks.json</span>
+      <span><div class="meter"><span style="width:34%; background:#4ecdc4"></span></div><span class="mk-sub num">68k / 200k</span></span>
+      <span class="mk-sub num">$9.80</span><span class="mk-sub num">2</span>
+      <span class="pill done"><i></i>ok</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px">
+      <span class="who"><span class="av" style="background:#f4d35e">I1</span> <span><span class="mk-tt">impl-1</span><span class="mk-sub">claude · opus</span></span></span>
+      <span class="mk-sub">pricing-engine</span>
+      <span class="pill work"><i></i>working</span>
+      <span class="mk-sub">Bash <span style="color:#6d7a89">· PE-118</span></span>
+      <span><div class="meter"><span style="width:82%; background:#ffb84d"></span></div><span class="mk-sub num">164k / 200k</span></span>
+      <span class="mk-sub num">$4.12</span><span class="mk-sub num">0</span>
+      <span class="pill loop"><i></i>compact soon</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px">
+      <span class="who"><span class="av" style="background:#4ecdc4">T1</span> <span><span class="mk-tt">test-1</span><span class="mk-sub">codex · gpt-5</span></span></span>
+      <span class="mk-sub">pricing-engine</span>
+      <span class="pill think"><i></i>thinking</span>
+      <span class="mk-sub">Read <span style="color:#6d7a89">· PE-121</span></span>
+      <span><div class="meter"><span style="width:19%; background:#5fc98a"></span></div><span class="mk-sub num">38k / 200k</span></span>
+      <span class="mk-sub num">$0.36</span><span class="mk-sub num">1</span>
+      <span class="pill done"><i></i>ok</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px; box-shadow: inset 2px 0 0 #ff6b6b">
+      <span class="who"><span class="av" style="background:#ff8a8a">C1</span> <span><span class="mk-tt">capture-1</span><span class="mk-sub">claude · sonnet</span></span></span>
+      <span class="mk-sub">trade-capture</span>
+      <span class="pill block"><i></i>needs you</span>
+      <span class="mk-sub" style="color:#ff8a8a">asked 2h ago</span>
+      <span><div class="meter"><span style="width:44%; background:#4ecdc4"></span></div><span class="mk-sub num">88k / 200k</span></span>
+      <span class="mk-sub num">$1.90</span><span class="mk-sub num">0</span>
+      <span class="pill block"><i></i>stalled 2h</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px">
+      <span class="who"><span class="av" style="background:#ffb84d">R1</span> <span><span class="mk-tt">risk-1</span><span class="mk-sub">claude · sonnet</span></span></span>
+      <span class="mk-sub">risk-reports</span>
+      <span class="pill loop"><i></i>looping</span>
+      <span class="mk-sub">Edit ×14 <span style="color:#ff8a8a">same file</span></span>
+      <span><div class="meter"><span style="width:71%; background:#ffb84d"></span></div><span class="mk-sub num">142k / 200k</span></span>
+      <span class="mk-sub num">$7.55</span><span class="mk-sub num">0</span>
+      <span class="pill loop"><i></i>breaker: steering</span>
+    </div>
+
+    <div class="mk-row" style="grid-template-columns: 148px 118px 96px 150px 130px 74px 62px 76px; opacity:.7">
+      <span class="who"><span class="av" style="background:#9b7ede">D1</span> <span><span class="mk-tt">docs-1</span><span class="mk-sub">opencode · local</span></span></span>
+      <span class="mk-sub">internal-tools</span>
+      <span class="pill idle"><i></i>idle</span>
+      <span class="mk-sub">— 22m</span>
+      <span><div class="meter"><span style="width:8%; background:#5fc98a"></span></div><span class="mk-sub num">16k / 200k</span></span>
+      <span class="mk-sub num">$0.10</span><span class="mk-sub num">3</span>
+      <span class="pill wait"><i></i>mail waiting</span>
+    </div>
+  </div>
+  </div>
+  <p class="fp-ev" style="margin-top:9px">
+    wired to: <code>fleet.json</code> (id, role, cwd, breaker, tokens, usd, lastTool, lastActiveSecAgo, inboxBacklog) ·
+    <code>telemetryUsage()</code> · <code>agentContext()</code> · <code>onBreakerState()</code> · <code>listPtys()</code>
+  </p>
+
+  <!-- ─── C: inspector ─── -->
+  <h3 style="font-size:17px; font-weight:700; margin:38px 0 4px">C · Agent inspector <span style="opacity:.4; font-weight:400">— look over its shoulder, then help</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
+    The screen you described: what is this agent doing, is it on track, and how do I guide it without breaking its
+    turn. Three panes — what it did (tool timeline), what it is saying (terminal), and what I can do about it
+    (intervene). Every control maps to an existing IPC call.
+  </p>
+
+  <div class="fp-scroll">
+  <div class="mk mk-min">
+    <div class="mk-bar"><span class="mk-dots"><i></i><i></i><i></i></span><b>AgentFleet</b><span class="mk-crumb">· impl-1 · pricing-engine · PE-118</span></div>
+    <div class="mk-toolbar">
+      <span class="who"><span class="av" style="background:#f4d35e; width:22px; height:22px">I1</span><span class="mk-title">impl-1</span></span>
+      <span class="pill work"><i></i>working · 41m</span>
+      <span class="chip">claude · opus</span>
+      <span class="chip">agent/impl-1 worktree</span>
+      <span style="margin-left:auto"></span>
+      <button class="mk-btn gh">Files</button><button class="mk-btn gh">Diff (7)</button><button class="mk-btn gh">Memory</button><button class="mk-btn gh">Mail</button>
+    </div>
+    <div style="display:flex">
+      <div class="mk-main" style="padding:12px 14px">
+        <div class="mk-sh" style="margin:0 0 8px">Tool timeline · last 6 minutes</div>
+        <div class="span-row"><span class="mk-sub">Read</span><span class="span-bar"><span style="left:0; width:9%; background:#4ecdc4"></span></span><span class="mk-sub num">0.4s</span></div>
+        <div class="span-row"><span class="mk-sub">Grep</span><span class="span-bar"><span style="left:9%; width:6%; background:#4ecdc4"></span></span><span class="mk-sub num">0.3s</span></div>
+        <div class="span-row"><span class="mk-sub">Edit</span><span class="span-bar"><span style="left:16%; width:12%; background:#5fc98a"></span></span><span class="mk-sub num">0.6s</span></div>
+        <div class="span-row"><span class="mk-sub">Bash</span><span class="span-bar"><span style="left:29%; width:26%; background:#ffd93d"></span></span><span class="mk-sub num">12.1s</span></div>
+        <div class="span-row"><span class="mk-sub" style="color:#ff8a8a">Bash</span><span class="span-bar"><span style="left:56%; width:8%; background:#ff6b6b"></span></span><span class="mk-sub num" style="color:#ff8a8a">fail</span></div>
+        <div class="span-row"><span class="mk-sub">Bash</span><span class="span-bar"><span style="left:65%; width:31%; background:#ffd93d"></span></span><span class="mk-sub num">18.4s</span></div>
+        <p class="fp-ev" style="margin-top:6px; color:#6d7a89">3 Bash calls in a row on the same migration — the breaker's repeated-tool counter is at 3 of 8.</p>
+
+        <div class="mk-sh">Live output</div>
+        <div class="term">
+<span class="d">$</span> python scripts/backfill_curves.py --from 2019-01-01 --to 2021-12-31 --dry-run<br>
+<span class="d">  reconciling 1,096 days …</span><br>
+<span class="g">  ✓ 1,094 days within 1bp</span><br>
+<span class="r">  ✗ 2019-03-31 delta 240bp   ✗ 2020-10-25 delta 187bp</span><br>
+<span class="d">  → both are DST transition days</span><br>
+<br>
+<span class="b">assistant</span> Both failures are DST boundaries. I'll special-case the 23/25-hour<br>
+days in the interpolation window and re-run the reconciliation.<br>
+<span class="y">⠋ Bash</span> <span class="d">python scripts/backfill_curves.py --from 2019-03-30 …</span>
+        </div>
+
+        <div class="mk-sh">Context &amp; budget</div>
+        <div style="display:flex; gap:10px">
+          <div class="mk-field" style="flex:1">
+            <div style="display:flex; justify-content:space-between"><span>Context</span><span style="color:#ffb84d">164k / 200k · 82%</span></div>
+            <div class="meter" style="margin-top:6px"><span style="width:82%; background:#ffb84d"></span></div>
+            <div class="mk-sub" style="margin-top:5px">auto-compact at 85% · <span style="color:#8fa9f7">compact now</span></div>
+          </div>
+          <div class="mk-field" style="flex:1">
+            <div style="display:flex; justify-content:space-between"><span>Spend</span><span>$4.12 / $15.00</span></div>
+            <div class="meter" style="margin-top:6px"><span style="width:27%; background:#5fc98a"></span></div>
+            <div class="mk-sub" style="margin-top:5px">148k in · 31k out · 1.2M cache read</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mk-side" style="width:308px; flex:0 0 308px">
+        <div class="mk-sh">Assigned</div>
+        <div class="mk-field"><span class="mk-key">PE-118</span> Backfill forward curves 2019–2021
+          <div class="mk-sub" style="margin-top:4px">contract set · 2 dependents · 41m in</div></div>
+
+        <div class="mk-sh">Guide this agent</div>
+        <div class="mk-field" style="color:#e7ebf0; border-color:#3a4654">
+          Don't special-case DST — the curve store is UTC. Convert at the boundary instead and add a test for
+          2019-03-31.
+        </div>
+        <div style="display:flex; gap:6px; margin-top:7px">
+          <button class="mk-btn pri" style="flex:1">Inject as guidance</button>
+          <button class="mk-btn">Queue for next idle</button>
+        </div>
+        <p class="fp-ev" style="margin-top:7px; color:#6d7a89">
+          Arrives as <code>additionalContext</code> on the next hook boundary. No keystrokes, no interrupt.
+        </p>
+
+        <div class="mk-sh">Constrain</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px">
+          <button class="mk-btn">Pause tool use</button>
+          <button class="mk-btn">Gate Bash</button>
+          <button class="mk-btn">Hold deliveries</button>
+          <button class="mk-btn" style="color:#ff8a8a; border-color:#5c2626">Stop cleanly</button>
+        </div>
+        <p class="fp-ev" style="margin-top:7px; color:#6d7a89">controlPause · controlGateTool · controlAutoDelivery · controlHalt</p>
+
+        <div class="mk-sh">Breaker</div>
+        <div class="mk-field" style="display:flex; align-items:center; gap:8px">
+          <span class="pill done"><i></i>healthy</span>
+          <span class="mk-sub">repeated-tool 3/8 · velocity ok</span>
+        </div>
+
+        <div class="mk-sh">Recent decisions</div>
+        <div class="mk-field" style="line-height:1.7">
+          <div><span style="color:#8fa9f7">you</span> · 12m — "staging only, never prod"</div>
+          <div><span style="color:#f4d35e">dispatcher</span> · 38m — assigned PE-118</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="fp-ev" style="margin-top:9px">
+    wired to: <code>telemetrySpans()</code> · <code>onPtyData()</code> · <code>agentContext()</code> ·
+    <code>controlSteer()</code> · <code>controlPause()</code> · <code>controlGateTool()</code> ·
+    <code>controlHalt()</code> · <code>onBreakerState()</code> · <code>gitStatus()/gitDiff()</code>
+  </p>
+
+  <!-- ─── D: needs you ─── -->
+  <h3 style="font-size:17px; font-weight:700; margin:38px 0 4px">D · Needs you <span style="opacity:.4; font-weight:400">— the only queue that should ever interrupt you</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
+    This already exists as the "Ask me" tab: when an agent can only proceed with a human, the orchestrator sets the
+    card to <code>blocked</code> and appends the ask to the card's <code>humanQA[]</code> array — the decision trail
+    stays on the task forever. What it adds here is the cost of <em>not</em> answering: the dependent work that is
+    frozen behind you.
+  </p>
+
+  <div class="fp-scroll">
+  <div class="mk mk-min">
+    <div class="mk-bar"><span class="mk-dots"><i></i><i></i><i></i></span><b>AgentFleet</b><span class="mk-crumb">· needs you · 3</span></div>
+    <div style="padding:14px">
+      <div style="border:1px solid #2a3441; border-radius:8px; overflow:hidden; margin-bottom:12px">
+        <div style="display:flex; align-items:center; gap:9px; padding:9px 12px; background:#1a222b; border-bottom:1px solid #2a3441">
+          <span class="pill block"><i></i>2h 14m</span>
+          <span class="mk-key">TC-042</span>
+          <span class="mk-tt">Point the nightly job at the new curve service</span>
+          <span class="chip" style="margin-left:auto">trade-capture</span>
+          <span class="who"><span class="av" style="background:#ff8a8a">C1</span> capture-1</span>
+        </div>
+        <div style="padding:11px 12px">
+          <div style="font-size:13px; margin-bottom:9px">"Which service account should the nightly job authenticate as in prod — the existing
+            <code>svc-nightly</code>, or do you want a dedicated one? I can't create accounts."</div>
+          <div class="mk-field" style="color:#6d7a89">Answer, or mark the to-do done…</div>
+          <div style="display:flex; gap:6px; margin-top:8px; align-items:center">
+            <button class="mk-btn pri">Send &amp; unblock</button>
+            <button class="mk-btn">I did it →</button>
+            <button class="mk-btn gh">Open agent</button>
+            <span class="mk-sub" style="margin-left:auto; color:#ff8a8a">3 tasks frozen behind this</span>
+          </div>
+          <div style="margin-top:10px; padding-top:9px; border-top:1px dashed #2a3441">
+            <div class="mk-sub" style="margin-bottom:5px">Waiting on this answer:</div>
+            <div style="display:flex; gap:14px; flex-wrap:wrap">
+              <span class="mk-sub">↳ <span class="mk-key">TC-043</span> smoke-test the cutover</span>
+              <span class="mk-sub">↳ <span class="mk-key">TC-047</span> decommission the legacy job</span>
+              <span class="mk-sub">↳ <span class="mk-key">RR-018</span> risk report source swap</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border:1px solid #2a3441; border-radius:8px; display:flex; align-items:center; gap:9px; padding:9px 12px">
+        <span class="pill block"><i></i>26m</span><span class="mk-key">PE-131</span>
+        <span class="mk-tt">Approve the vendor API rate-limit increase ($400/mo)</span>
+        <span class="chip" style="margin-left:auto">pricing-engine</span>
+        <span class="mk-sub">1 frozen</span>
+      </div>
+      <div style="border:1px solid #2a3441; border-radius:8px; display:flex; align-items:center; gap:9px; padding:9px 12px; margin-top:8px">
+        <span class="pill wait"><i></i>8m</span><span class="mk-key">RR-011</span>
+        <span class="mk-tt">risk-1 hit the repeated-tool breaker — steer or stop?</span>
+        <span class="chip" style="margin-left:auto">risk-reports</span>
+        <span class="mk-sub">breaker</span>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="fp-ev" style="margin-top:9px">
+    wired to: <code>hiveTasks()</code> <code>humanQA[]</code> · <code>hivePatchTask()</code> ·
+    <code>hiveSend()</code> (answer is mailed to the dispatcher) · <code>onApprovalRequest()</code> ·
+    dependents walk already implemented in <code>AskMeTab.tsx</code>
+  </p>
+
+  <!-- ─── E: review & workspace ─── -->
+  <h3 style="font-size:17px; font-weight:700; margin:38px 0 4px">E · Review &amp; workspace <span style="opacity:.4; font-weight:400">— read what it actually changed</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
+    You want the built-in IDE kept, so here it is inside the new shell. It earns its place on the supervision
+    argument: "is this agent on track" is often really "show me the diff". The editor, file tree, commit graph,
+    branch compare and guarded checkout all exist today and all read through main's brokered fs/git bridges — so
+    this is a restyle, not a rebuild.
+  </p>
+
+  <div class="fp-scroll">
+  <div class="mk mk-min">
+    <div class="mk-bar"><span class="mk-dots"><i></i><i></i><i></i></span><b>AgentFleet</b><span class="mk-crumb">· impl-1 · agent/impl-1 · review</span></div>
+    <div class="mk-toolbar">
+      <span class="mk-title">Changes</span>
+      <button class="mk-btn gh" style="color:#e7ebf0; border-bottom:2px solid #f4d35e; border-radius:0">Changes 7</button>
+      <button class="mk-btn gh">History</button>
+      <button class="mk-btn gh">Compare</button>
+      <span class="chip">agent/impl-1</span>
+      <span class="chip">3 ahead · 0 behind</span>
+      <span style="margin-left:auto"></span>
+      <span class="mk-sub"><span class="stat-a">+184</span> <span class="stat-d">−41</span></span>
+      <button class="mk-btn">Open editor</button>
+    </div>
+    <div style="display:flex">
+      <div class="mk-rail" style="width:210px; flex:0 0 210px">
+        <div class="mk-railhead">Changed files</div>
+        <div class="tree" style="font-family:ui-monospace,Menlo,monospace; font-size:11px">
+          <div class="on">scripts/backfill_curves.py <span class="stat-a">+96</span></div>
+          <div>curves/interpolate.py <span class="stat-a">+38</span> <span class="stat-d">−22</span></div>
+          <div>curves/calendar.py <span class="stat-a">+31</span> <span class="stat-d">−7</span></div>
+          <div>tests/test_dst_days.py <span class="stat-a">+19</span></div>
+          <div>docs/curves.md <span class="stat-a">+0</span> <span class="stat-d">−12</span></div>
+          <div style="color:#6d7a89">+ 2 more</div>
+        </div>
+        <div class="mk-railhead">Worktree</div>
+        <div class="tree" style="font-family:ui-monospace,Menlo,monospace; font-size:11px">
+          <div>~/repos/pricing-engine</div>
+          <div style="color:#6d7a89">.worktrees/impl-1</div>
+        </div>
+      </div>
+
+      <div class="mk-main">
+        <div style="display:flex; align-items:center; gap:8px; padding:7px 14px; background:#141a21; border-bottom:1px solid #2a3441">
+          <span class="mk-key">scripts/backfill_curves.py</span>
+          <span class="pill work" style="border-radius:5px"><i></i>uncommitted</span>
+          <span style="margin-left:auto" class="mk-sub">side-by-side</span>
+          <span class="mk-sub">·</span><span class="mk-sub" style="color:#8fa9f7">unified</span>
+        </div>
+        <div class="dv" style="padding:9px 0">
+          <div class="dl hunk"><i></i><span>@@ -142,7 +142,19 @@ def reconcile(day, curve):</span></div>
+          <div class="dl"><i>142</i><span>     snapshot = eod_snapshot(day)</span></div>
+          <div class="dl del"><i>143</i><span>-    hours = 24</span></div>
+          <div class="dl add"><i>143</i><span>+    # DST boundaries are 23h / 25h locally; the store is UTC, so</span></div>
+          <div class="dl add"><i>144</i><span>+    # convert at the boundary instead of special-casing the day.</span></div>
+          <div class="dl add"><i>145</i><span>+    hours = utc_hours_in_local_day(day, tz=MARKET_TZ)</span></div>
+          <div class="dl"><i>146</i><span>     for h in range(hours):</span></div>
+          <div class="dl"><i>147</i><span>         delta = curve.at(day, h) - snapshot.at(day, h)</span></div>
+          <div class="dl del"><i>148</i><span>-        if abs(delta) &gt; TOLERANCE:</span></div>
+          <div class="dl add"><i>148</i><span>+        if abs(delta) &gt; TOLERANCE_BP:</span></div>
+          <div class="dl"><i>149</i><span>             yield Mismatch(day, h, delta)</span></div>
+        </div>
+        <div style="padding:9px 14px; border-top:1px solid #2a3441; display:flex; gap:8px; align-items:center">
+          <span class="mk-sub">Your guidance at 14:02 landed here —</span>
+          <span class="chip" style="color:#f4d35e; border-color:#5c4f1a">convert at the boundary, don't special-case</span>
+          <span style="margin-left:auto"></span>
+          <button class="mk-btn">Comment on line</button>
+          <button class="mk-btn pri">Looks right</button>
+        </div>
+      </div>
+
+      <div class="mk-side" style="width:250px; flex:0 0 250px">
+        <div class="mk-sh">Commits on this branch</div>
+        <div class="mk-field" style="line-height:1.9; font-family:ui-monospace,Menlo,monospace; font-size:10.5px">
+          <div><span style="color:#5fc98a">●</span> a91c4e2 <span style="color:#95a2b3">handle DST via UTC</span></div>
+          <div><span style="color:#5fc98a">●</span> 7d20f18 <span style="color:#95a2b3">add 2019-03-31 test</span></div>
+          <div><span style="color:#5fc98a">●</span> 3e8b1a0 <span style="color:#95a2b3">backfill script</span></div>
+          <div><span style="color:#6d7a89">│</span></div>
+          <div><span style="color:#8fa9f7">◌</span> main <span style="color:#6d7a89">2d ago</span></div>
+        </div>
+        <div class="mk-sh">Checks</div>
+        <div class="mk-field" style="line-height:1.8">
+          <div><span style="color:#5fc98a">✓</span> typecheck</div>
+          <div><span style="color:#5fc98a">✓</span> unit · 412 passed</div>
+          <div><span style="color:#ffb84d">⚠</span> reconcile · 2 days over 1bp</div>
+        </div>
+        <div class="mk-sh">Actions</div>
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <button class="mk-btn">Open in my editor</button>
+          <button class="mk-btn">Compare with main</button>
+          <button class="mk-btn">Checkout (guarded)</button>
+        </div>
+        <p class="fp-ev" style="margin-top:9px; color:#6d7a89">
+          Checkout refuses on a dirty tree — the guard already exists in <code>git.ts</code>.
+        </p>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="fp-ev" style="margin-top:9px">
+    wired to: <code>gitStatus()</code> · <code>gitDiff()</code> · <code>gitLogGraph()</code> ·
+    <code>gitCommitFiles()</code> · <code>gitCompareRefs()</code> · <code>gitCheckout()</code> ·
+    <code>gitWorktrees()</code> · <code>listDir()</code>/<code>readFile()</code>/<code>writeFile()</code> ·
+    existing <code>ide/**</code> + <code>components/git/CommitGraph</code>
+  </p>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ data model ══════════════════ -->
+<section id="model">
+  <div class="fp-eyebrow">5 · Data model</div>
+  <h2 class="fp-h2">What has to change on disk</h2>
+  <p class="fp-lede">
+    Less than you would guess, and you chose to keep it in the hive rather than move to SQLite or sync an external
+    tracker. The task ledger already carries status, assignee, dependencies, priority, human Q&amp;A
+    and a result. What it has no concept of is a <strong>project</strong> — today <code>project</code> is a renderer-only
+    display string set to <code>basename(cwd)</code>, and it never reaches the hive.
+  </p>
+
+  <div class="grid gap-4 mt-6" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr))">
+    <div>
+      <div class="fp-eyebrow" style="margin-bottom:8px">Today · src/main/hive.ts</div>
+<pre class="fp-code"><span class="k">export interface</span> <span class="n">HiveTask</span> {
+  id: string; title: string;
+  description?: string;
+  assignee?: string;                <span class="c">// agent id</span>
+  status: <span class="s">'todo'|'doing'|'blocked'|'done'</span>;
+  dependsOn: string[];
+  priority: number;
+  createdAt: string;
+  humanQA?: HumanQA[];              <span class="c">// ask → answer trail</span>
+  result?: string;
+  slack?: { channel; thread_ts };
+  webhook?: { tokenHash };
+}
+<span class="c">// no project. no ordering key. no contract.</span></pre>
+    </div>
+    <div>
+      <div class="fp-eyebrow" style="margin-bottom:8px">Decided · additive only</div>
+<pre class="fp-code"><span class="c">// NEW FILE — hive/projects.json, written only by main</span>
+<span class="k">export interface</span> <span class="n">Project</span> {
+  id: string; name: string;
+  repoPath: string;                 <span class="c">// agents' cwd</span>
+  isolation: <span class="s">'shared'|'worktree-per-agent'</span>;
+  members: string[];                <span class="c">// agent ids</span>
+  budgetUsd?: number;
+  archived?: boolean;
+}
+
+<span class="c">// hive/tasks.json — four optional fields</span>
+<span class="k">interface</span> <span class="n">HiveTask</span> {
+  <span class="c">/* …unchanged… */</span>
+  <span class="add">projectId?: string;</span>   <span class="c">// undefined = intake</span>
+  <span class="add">rank?: string;</span>        <span class="c">// lexicographic backlog order</span>
+  <span class="add">labels?: string[];</span>
+  <span class="add">contract?: { objective, output, tools?, boundaries? };</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="fp-cards" style="margin-top:20px">
+    <div class="fp-card">
+      <h4>Why additive, not a new store</h4>
+      <p>The hive is a git repo committed by exactly one writer. Old tasks parse unchanged, a rollback is a file
+      revert, and the orchestrator keeps reading the same JSON it reads today. A SQLite move would fork the audit
+      trail for no gain at this scale.</p>
+    </div>
+    <div class="fp-card">
+      <h4>Projects already exist, unnamed</h4>
+      <p>Each agent has a <code>cwd</code>, optional per-agent git worktree, and its own memory. "Agents working on
+      different projects" is the current spawn model — we are naming and grouping it, not inventing it.</p>
+    </div>
+    <div class="fp-card">
+      <h4>Backfill is one pass</h4>
+      <p>On first launch: create a project per distinct agent <code>cwd</code>, set <code>projectId</code> on every
+      task from its assignee's cwd, and rank by existing <code>priority</code> then <code>createdAt</code>. Anything
+      unmatched lands in Intake.</p>
+    </div>
+    <div class="fp-card">
+      <h4>The contract field is free signal</h4>
+      <p>The orchestrator's prompt already tells it to dispatch as OBJECTIVE / OUTPUT / TOOLS / BOUNDARIES. Today
+      that structure is prose in a message body. Storing it on the card makes it reviewable and editable before
+      dispatch.</p>
+    </div>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ steer ══════════════════ -->
+<section id="steer">
+  <div class="fp-eyebrow">6 · Mechanism</div>
+  <h2 class="fp-h2">How "helping an agent" actually works</h2>
+  <p class="fp-lede">
+    This matters for the UI design: guidance must not look like typing into a terminal, because it isn't. The
+    <code>ControlRegistry</code> parks your text and the hook server hands it to the agent at its next lifecycle
+    boundary as extra context. The agent never gets interrupted, and nothing lands mid-keystroke.
+  </p>
+
+  <div class="mermaid" style="margin-top:20px">
+sequenceDiagram
+  autonumber
+  actor You
+  participant UI as Inspector (renderer)
+  participant Ctrl as ControlRegistry (main)
+  participant Hook as HookServer (main)
+  participant Agent as agent CLI
+  You->>UI: write guidance, press "Inject as guidance"
+  UI->>Ctrl: controlSteer(agentId, text)
+  Note over Ctrl: queued — nothing sent yet
+  Agent->>Hook: PostToolUse / UserPromptSubmit
+  Hook->>Ctrl: any pending steers or gates?
+  Ctrl-->>Hook: additionalContext: "&lt;your guidance&gt;"
+  Hook-->>Agent: injected once, turn continues
+  Agent->>Hook: Stop (turn finished)
+  Hook->>Ctrl: inbox drained? halted?
+  Ctrl-->>Hook: decision: block → keep working
+  </div>
+
+  <div class="fp-cards" style="margin-top:18px">
+    <div class="fp-card">
+      <span class="fp-tag keep">exists</span>
+      <h4>Four levers, one protocol</h4>
+      <p><strong>Pause / gate a tool</strong> → <code>PreToolUse</code> returns deny, immediately and race-free.
+      <strong>Guide</strong> → <code>additionalContext</code>. <strong>Stop cleanly</strong> →
+      <code>{continue:false}</code> at the next boundary, instead of killing the PTY.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag keep">exists</span>
+      <h4>The circuit breaker is the same ladder, automated</h4>
+      <p>healthy → steering → constrained → stopped, tripped by token velocity, repeated tools, error storms or
+      budget. Surfacing its level per agent turns it from a hidden guard into a fleet health column.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag build">new</span>
+      <h4>What the UI must add</h4>
+      <p>Show that guidance is <em>pending</em> until the next boundary, and show what was injected afterwards.
+      Today <code>pendingSteers</code> is a number nobody displays — a silent lever feels broken.</p>
+    </div>
+    <div class="fp-card" style="border-color:#3a3208">
+      <span class="fp-tag build">decided</span>
+      <h4>Hybrid assignment — where the line falls</h4>
+      <p><strong>Rules in main</strong> (deterministic, testable): an explicit assignee you set; capability/role match
+      against the registry; pull the top-ranked ready card when a project member goes idle; never route outside a
+      project's members; refuse a card with no contract.
+      <strong>The dispatcher agent keeps</strong>: decomposing a vague ask into cards, triage, cross-agent conflict
+      resolution, what to escalate to you, and sign-off. Rules run first; the agent handles what falls through.</p>
+    </div>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ plan ══════════════════ -->
+<section id="plan">
+  <div class="fp-eyebrow">7 · Delivery</div>
+  <h2 class="fp-h2">Five phases, each one shippable</h2>
+  <p class="fp-lede">Ordered to your build ranking — Fleet, inspector, backlog, needs-you. The data-model change
+  lands in P3, once there is a UI to justify its exact shape. The IDE follows in P5 now that you are keeping it, and
+  the assignment work lands last because it needs an eval harness before anyone touches that prompt.</p>
+
+  <div class="fp-scroll" style="margin-top:18px">
+    <table class="fp-t" style="min-width:760px">
+      <thead><tr><th style="width:52px">Phase</th><th>Work</th><th>Outcome</th><th style="width:88px">Size</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>P0</strong></td>
+          <td><strong>Fork hygiene.</strong> Fork with <code>upstream</code> wired, rename to <strong>AgentFleet</strong>, delete <code>scene/**</code>, the sprite assets, the theme picker and the mock event loop. Drop Pixi. Boot into a placeholder shell that lists agents and opens a terminal.</td>
+          <td>A clean, buildable fork with no game and no non-commercial asset licence.</td>
+          <td>1–2 days</td>
+        </tr>
+        <tr>
+          <td><strong>P1</strong></td>
+          <td><strong>Shell + Fleet.</strong> New token set and app frame; the fleet table straight off <code>fleet.json</code> and the telemetry collector, with sort, filter and drill-in. <em>Your first pick.</em></td>
+          <td>One screen answering "is the floor healthy?" — from data that exists today and nobody can see.</td>
+          <td>~1 week</td>
+        </tr>
+        <tr>
+          <td><strong>P2</strong></td>
+          <td><strong>Inspector + intervention.</strong> Tool timeline from <code>telemetrySpans()</code>, live terminal, context and spend gauges, the four control levers, visible pending-steer state — plus the read-only diff rail (changed files, per-file diff, branch commits), because "on track?" is usually "show me the diff".</td>
+          <td>Look over an agent's shoulder, read what it changed, and guide it without breaking its turn.</td>
+          <td>~1 week</td>
+        </tr>
+        <tr>
+          <td><strong>P3</strong></td>
+          <td><strong>Projects + backlog.</strong> <code>projects.json</code> + IPC + one-pass backfill; project switcher; backlog board with rank, contract editor and dispatch; per-project fleet filter and cost rollup.</td>
+          <td>Projects and backlogs become the organising unit instead of <code>basename(cwd)</code>.</td>
+          <td>1–2 weeks</td>
+        </tr>
+        <tr>
+          <td><strong>P4</strong></td>
+          <td><strong>Needs-you inbox.</strong> Port <code>AskMeTab</code> with the frozen-dependents cascade; desktop notifications; keep Slack ingress as the answer-from-phone path.</td>
+          <td>You are the bottleneck only when you actually are.</td>
+          <td>2–4 days</td>
+        </tr>
+        <tr>
+          <td><strong>P5</strong></td>
+          <td><strong>Workspace IDE.</strong> The rest of the built-in IDE, restyled onto the new tokens: file tree, editor tabs and save, the commit graph, branch compare and guarded checkout — reachable from any project or agent, not just the selected one. Consolidate onto one editor stack while we are in here (see risks).</td>
+          <td>Read, edit and review agent work without leaving the app.</td>
+          <td>~1 week</td>
+        </tr>
+        <tr>
+          <td><strong>P6</strong></td>
+          <td><strong>Hybrid assignment.</strong> Build the replay harness over recorded <code>log.jsonl</code> <em>first</em>, then the deterministic rules in main, then retune the dispatcher prompt from "run the office" to "work this backlog" and teach it <code>projectId</code>.</td>
+          <td>Assignment is predictable where it should be and smart where it must be.</td>
+          <td>~1 week + evals</td>
+        </tr>
+        <tr>
+          <td><strong>P7</strong></td>
+          <td><strong>Hardening.</strong> Per-project windows and budget caps, CI watcher per project, session restore, then delete whatever nobody opened.</td>
+          <td>Daily-driver quality.</td>
+          <td>ongoing</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="fp-note" style="margin-top:12px">
+    Per your stacked-diff convention each phase is a stack: production code first, tests on a dependent branch,
+    <code>AGENTS.md</code>/docs last. P0 is the exception — a single deletion commit reviews better whole.
+  </p>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ risks ══════════════════ -->
+<section id="risks">
+  <div class="fp-eyebrow">8 · Risks</div>
+  <h2 class="fp-h2">What will actually bite us</h2>
+
+  <div class="fp-cards" style="margin-top:18px">
+    <div class="fp-card" style="border-color:#5c2626">
+      <span class="fp-tag strip">highest</span>
+      <h4>The orchestration logic is a prompt, not code</h4>
+      <p>The dispatcher's behaviour — routing, decomposition, escalation, when to ask a human — lives in a
+      ~600-word system-prompt block in <code>hive.ts</code>. Changing how work gets assigned is prompt engineering with
+      no test harness. <strong>Mitigation:</strong> before P3, build a replay harness over recorded
+      <code>log.jsonl</code> so a prompt change can be scored, not vibed.</p>
+    </div>
+    <div class="fp-card" style="border-color:#5c421a">
+      <span class="fp-tag strip">high</span>
+      <h4>Upstream is moving fast</h4>
+      <p>v0.4.4, multiple open PRs, fixes landing weekly in exactly the code we depend on (PTY, Windows, provider
+      bridges). <strong>Now policy, per your tracked-fork call:</strong> <code>src/renderer</code> is ours outright;
+      <code>src/main</code>/<code>preload</code>/<code>shared</code> stay rebase-clean, so every fork-specific engine
+      addition goes in a <em>new file</em> rather than an edit to an upstream one, and we rebase on a fixed cadence
+      instead of on demand. A PR that edits an upstream engine file needs a reason.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag keep">settled</span>
+      <h4>Local-only, and that is the decision</h4>
+      <p>You picked Electron on a single machine, so the renderer calls <code>window.cth</code> directly with no
+      transport abstraction to maintain. The cost to accept: no browser access, no second pair of eyes on the fleet.
+      The answer when you are away is the one that already ships — Claude Code's remote approvals plus the
+      Slack/webhook ingress.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag strip">medium</span>
+      <h4>One writer, or corruption</h4>
+      <p>Only the main process may commit to the hive, and only one loop may type into a PTY. Both invariants are
+      easy to break from a new UI that feels like it should just write a file. Encode them as review rules and keep
+      <code>docs/message-queue.md</code> as fork documentation.</p>
+    </div>
+    <div class="fp-card" style="border-color:#1f4a33">
+      <span class="fp-tag keep">upside</span>
+      <h4>Deleting the sprites removes the commercial blocker</h4>
+      <p>The bundled tilesets and character sheets are LimeZu <em>FREE VERSION — non-commercial only</em>, and the
+      recolours inherit it. The code is MIT. P0's deletion is what makes this fork commercially usable — worth doing
+      first for that reason alone.</p>
+    </div>
+    <div class="fp-card" style="border-color:#1f4a33">
+      <span class="fp-tag keep">upside</span>
+      <h4>Telemetry goes quiet by itself</h4>
+      <p>Official builds send anonymous usage events; forks compile with no key and send nothing. Still worth an
+      explicit check in P0 so we can state it plainly internally.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag build">watch</span>
+      <h4>Cost is tracked per agent, not per project</h4>
+      <p>The ledger keys on agent + session. A per-project rollup needs the <code>projectId</code> join from P2 — so
+      "what did this project cost" is a P2 deliverable, not a P1 one. Don't promise it early.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag build">watch</span>
+      <h4>You are keeping two editors, not one</h4>
+      <p>The repo ships <strong>both</strong> stacks: Monaco (<code>monaco-editor</code> +
+      <code>@monaco-editor/react</code>) in <code>ide/**</code>, and CodeMirror
+      (<code>@uiw/react-codemirror</code> plus seven <code>@codemirror/lang-*</code> packages) in
+      <code>CodeEditor.tsx</code> and the trigger JSON editor. Keeping the IDE means picking one in P5 — Monaco, for
+      parity with the diff rails — and porting the two CodeMirror callers over.</p>
+    </div>
+    <div class="fp-card">
+      <span class="fp-tag build">watch</span>
+      <h4>Ten engines is ten lifecycles</h4>
+      <p>Provider quirks (Crush needs its seed typed into the TUI, non-Claude bridges need a PTY-quiescence
+      fallback to detect turn-end) live in <code>useHive</code>. Rewriting that loop instead of porting it is the
+      fastest way to break the fork.</p>
+    </div>
+  </div>
+</section>
+
+<div class="fp-rule"></div>
+
+<!-- ══════════════════ decisions ══════════════════ -->
+<section id="decide">
+  <div class="fp-eyebrow">9 · Decided</div>
+  <h2 class="fp-h2">The shape you chose</h2>
+  <p class="fp-lede">
+    All six answers are folded into the plan above — phases, fork rules, the assignment split and the data model now
+    read as decisions rather than options. Here is the record, and what each one commits us to.
+  </p>
+
+  <div class="fp-scroll" style="margin-top:18px">
+    <table class="fp-t" style="min-width:740px">
+      <thead><tr><th style="width:126px">Question</th><th style="width:212px">Your answer</th><th>What it commits us to</th></tr></thead>
+      <tbody>
+        <tr><td>Product name</td><td><strong>AgentFleet</strong></td>
+            <td>Applied throughout, including the mock chrome. Renaming is cheap in P0 and expensive after P3.</td></tr>
+        <tr><td>Shell</td><td><strong>Electron desktop</strong>, single machine</td>
+            <td>No daemon, no transport layer, no auth story. The renderer talks to <code>window.cth</code> directly. Remote access stays Slack plus Claude Code's own remote approvals.</td></tr>
+        <tr><td>Fork strategy</td><td><strong>Tracked fork</strong> — own the renderer, rebase the engine</td>
+            <td><code>src/renderer</code> is ours. Engine additions go in new files; a PR editing an upstream engine file needs a reason. Fixed rebase cadence against <code>upstream/main</code>.</td></tr>
+        <tr><td>Assignment</td><td><strong>Hybrid</strong> — rules plus dispatcher</td>
+            <td>Deterministic rules in main for the mechanical cases; the dispatcher keeps decomposition, triage and escalation. Ships in P5, behind the replay harness.</td></tr>
+        <tr><td>Backlog store</td><td><strong>Stay in the hive</strong></td>
+            <td>New <code>projects.json</code> plus four optional fields on <code>tasks.json</code>. Single-committer git and the agent-readable audit trail both survive. No external tracker sync in scope.</td></tr>
+        <tr><td>Build order</td><td><strong>Fleet → Inspector → Backlog → Needs-you</strong></td>
+            <td>Phases re-cut to match. The shell lands with Fleet, so P1 is the first thing you can actually use.</td></tr>
+        <tr><td>Built-in IDE</td><td><strong>Keep it</strong> — editor, file tree and git rails</td>
+            <td>1,838 lines ported and restyled. The read-only diff rail comes early, with the inspector in P2; the full editor and git rails get their own phase, P5. It also means picking one editor stack — the repo currently ships Monaco <em>and</em> CodeMirror.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="fp-rule" style="margin:40px 0 30px"></div>
+
+  <div class="fp-eyebrow">Still open</div>
+  <h2 class="fp-h2" style="font-size:23px">One approval before I start</h2>
+
+  <div class="grid gap-4 mt-6" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr))">
+    <fieldset class="fp-q" style="border-color:#5c4f1a">
+      <legend>Approval to start P0</legend>
+      <p class="fp-note" style="margin:2px 0 10px">
+        P0 deletes roughly <strong>5,900 lines</strong> and 304&nbsp;KB of assets and renames the product. I will not
+        create a remote, push anything, or commit to <code>main</code> without you saying so — this clone is currently
+        clean on <code>main</code>.
+      </p>
+      <form data-lavish-question="start" data-prefix="AgentFleet decision — start P0:">
+        <label class="fp-opt"><input type="radio" name="start" value="Start P0 locally on a branch, nothing pushed">
+          <span><b>Start locally on a branch</b><span class="fp-rec">recommended</span>
+          <span>Work on <code>fork/p0-strip</code> in this clone. Nothing pushed, nothing published; you review the diff before any remote exists.</span></span></label>
+        <label class="fp-opt"><input type="radio" name="start" value="Create the fork remote first, then start P0">
+          <span><b>Create the fork remote first</b>
+          <span>Tell me the org and whether it is private, and I will set up <code>origin</code> and <code>upstream</code> before the strip.</span></span></label>
+        <label class="fp-opt"><input type="radio" name="start" value="Hold — reshape the surfaces first">
+          <span><b>Hold — more review first</b>
+          <span>Annotate the mocks above and I will reshape the surfaces before any code moves.</span></span></label>
+        <div class="flex items-center gap-3 mt-2">
+          <button type="submit" class="btn btn-sm btn-primary">Queue this answer</button>
+          <span class="fp-qstate" data-state></span>
+        </div>
+      </form>
+    </fieldset>
+
+    <div class="fp-card" style="border-color:#3a3208">
+      <h4>What P0 deliberately does not touch</h4>
+      <p style="line-height:1.7">
+        The IDE and git rails (<code>ide/**</code>, <code>components/git/**</code>) stay exactly as they are — kept,
+        unstyled, reachable. The Command Center's eleven tabs stay too, ugly but working, so nothing you rely on
+        disappears between P0 and the phase that replaces it. The only things that go are the floor, the sprites and
+        the mock event loop.
+      </p>
+      <p class="fp-note" style="margin-top:10px">
+        Nothing in <code>src/main</code>, <code>src/preload</code> or <code>src/shared</code> is edited in P0. That
+        keeps the first commit trivially rebase-able against upstream, per your tracked-fork call.
+      </p>
+    </div>
+  </div>
+
+  <div class="fp-card" style="margin-top:22px">
+    <h4>What P0 does, concretely</h4>
+    <p style="line-height:1.75">
+      <strong>1</strong> wire <code>upstream</code> and branch ·
+      <strong>2</strong> delete <code>src/renderer/src/scene/**</code> (5,382) and the sprite assets (304&nbsp;KB) ·
+      <strong>3</strong> delete <code>OfficeThemePicker</code>, <code>SpritePortrait</code>, <code>mockEvents.ts</code> (495) ·
+      <strong>4</strong> drop <code>pixi.js</code> from <code>package.json</code> ·
+      <strong>5</strong> lift <code>useHive</code> off <code>cast.ts</code> / <code>OFFICE_CAST</code> and the
+      <code>character</code> / <code>accent</code> fields on <code>Agent</code> ·
+      <strong>6</strong> rename product, brand assets and window title to <strong>AgentFleet</strong> ·
+      <strong>7</strong> placeholder shell — agent list, terminal and the existing IDE, so the app still boots ·
+      <strong>8</strong> confirm the telemetry key is absent in a source build ·
+      <strong>9</strong> <code>npm run typecheck</code> green.
+    </p>
+    <p class="fp-note" style="margin-top:10px">
+      Per your stacked-diff convention, P1 onward each land as a stack: production code, then tests on a dependent
+      branch, then <code>AGENTS.md</code> and docs. P0 stays one deletion commit — it reviews better whole.
+    </p>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<!-- ══════════════════ scripts ══════════════════ -->
+<script>
+  // Queue one prompt per question, only when the user submits that question.
+  document.querySelectorAll('form[data-lavish-question]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const key = form.dataset.lavishQuestion;
+      const prefix = form.dataset.prefix || '';
+      const data = new FormData(form);
+      const parts = [];
+      for (const [field, value] of data.entries()) {
+        const v = String(value).trim();
+        if (v) parts.push(field === 'ms' ? v : (field === 'notes' ? 'notes: ' + v : (field === 'name' ? 'name: ' + v : v)));
+      }
+      const state = form.querySelector('[data-state]');
+      if (!parts.length) {
+        if (state) state.textContent = 'nothing selected yet';
+        return;
+      }
+      const answer = parts.join(' · ');
+      const text = prefix + ' ' + answer;
+      if (window.lavish && window.lavish.queuePrompt) {
+        window.lavish.queuePrompt(text, {
+          tag: 'decision',
+          text: key + ': ' + answer,
+          queueKey: key,
+          element: form,
+          data: { question: key, answer: answer }
+        });
+        if (state) state.textContent = 'queued — press Send to Agent';
+      } else if (state) {
+        state.textContent = 'selected: ' + answer;
+      }
+    });
+  });
+</script>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs";
+
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const paint = document.createElement("canvas").getContext("2d");
+  function toRgba(color) {
+    paint.clearRect(0, 0, 1, 1);
+    paint.fillStyle = "#000";
+    paint.fillStyle = color;
+    paint.fillRect(0, 0, 1, 1);
+    return paint.getImageData(0, 0, 1, 1).data;
+  }
+  function compositeRgba(foreground, background) {
+    const fa = foreground[3] / 255, ba = background[3] / 255;
+    const alpha = fa + ba * (1 - fa);
+    if (alpha === 0) return [0, 0, 0, 0];
+    return [
+      (foreground[0] * fa + background[0] * ba * (1 - fa)) / alpha,
+      (foreground[1] * fa + background[1] * ba * (1 - fa)) / alpha,
+      (foreground[2] * fa + background[2] * ba * (1 - fa)) / alpha,
+      alpha * 255,
+    ];
+  }
+  function pageIsDark() {
+    const root = document.documentElement;
+    const rootBackground = toRgba(getComputedStyle(root).backgroundColor);
+    const bodyBackground = document.body ? toRgba(getComputedStyle(document.body).backgroundColor) : [0, 0, 0, 0];
+    const [r, g, b, a] = compositeRgba(bodyBackground, rootBackground);
+    if (a > 0) return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+    const cs = getComputedStyle(root).colorScheme;
+    if (cs.includes("dark") && !cs.includes("light")) return true;
+    if (cs.includes("light") && !cs.includes("dark")) return false;
+    return darkQuery.matches;
+  }
+
+  const diagrams = [...document.querySelectorAll(".mermaid")].map((el) => ({ el, src: el.textContent }));
+  let applied, rendering = false, queued = false;
+  function queueRender() { queued = true; if (!rendering) void render(); }
+  async function render() {
+    rendering = true;
+    try {
+      while (queued) {
+        queued = false;
+        const theme = pageIsDark() ? "dark" : "default";
+        if (theme === applied) continue;
+        mermaid.initialize({ startOnLoad: false, theme, securityLevel: "strict" });
+        for (const { el, src } of diagrams) { el.removeAttribute("data-processed"); el.textContent = src; }
+        try { await mermaid.run({ nodes: diagrams.map((d) => d.el) }); }
+        catch (error) { console.error("Mermaid diagram render failed:", error); return; }
+        applied = theme;
+      }
+    } finally { rendering = false; if (queued) queueRender(); }
+  }
+  if (document.readyState === "complete") queueRender();
+  else window.addEventListener("load", queueRender, { once: true });
+  const themeObserver = new MutationObserver(queueRender);
+  for (const el of [document.documentElement, document.body]) {
+    if (!el) continue;
+    themeObserver.observe(el, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+  }
+  document.addEventListener("change", queueRender, true);
+  darkQuery.addEventListener("change", queueRender);
+</script>
+</body>
+</html>
