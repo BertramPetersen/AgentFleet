@@ -46,7 +46,6 @@ export function AgentInspector({ agent }: { agent: Agent }) {
   const closeInspector = useStore((s) => s.closeInspector);
   const updateAgent = useStore((s) => s.updateAgent);
   const setFullscreen = useStore((s) => s.setFullscreen);
-  const setIdeOpen = useStore((s) => s.setIdeOpen);
   const fullscreenAgentId = useStore((s) => s.fullscreenAgentId);
   const { samples } = useFleetTelemetry();
   const onPtyStream = usePtyParser(agent.id);
@@ -89,9 +88,6 @@ export function AgentInspector({ agent }: { agent: Agent }) {
         <Chip>{agent.project}</Chip>
         {agent.worktreePath && <Chip>agent/{agent.id} worktree</Chip>}
         <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
-          <PixelButton variant="secondary" size="sm" onClick={() => setIdeOpen(true, agent.id)}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="code" /> IDE</span>
-          </PixelButton>
           {live && (
             <PixelButton variant="secondary" size="sm" onClick={() => setFullscreen(agent.id)}>
               <span title="Full-window terminal" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>

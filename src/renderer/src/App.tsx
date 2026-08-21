@@ -29,7 +29,6 @@ import { acquireTerminal } from '@/components/terminalPool';
 import { FullscreenTerminal } from '@/components/FullscreenTerminal';
 import { TaskDetailOverlay } from '@/components/TaskDetailOverlay';
 import { FullscreenFileEditor } from '@/components/FullscreenFileEditor';
-import { IdePanel } from '@/ide/IdePanel';
 import { useHoldOptionToTalk } from '@/freeflow/holdOption';
 
 // Injected at build time from package.json (see electron.vite.config.ts).
@@ -47,11 +46,9 @@ export function App() {
   const fullscreenFilePath = useStore(s => s.fullscreenFilePath);
   const sidebarWidth = useStore(s => s.sidebarWidth);
   const setSidebarWidth = useStore(s => s.setSidebarWidth);
-  const ideOpen = useStore(s => s.ideOpen);
   const inspectorId = useStore(s => s.inspectorId);
   const mainView = useStore(s => s.mainView);
   const inspected = agents.find(a => a.id === inspectorId);
-  const setIdeOpen = useStore(s => s.setIdeOpen);
 
   const [config, setConfig] = useState<HarnessConfig | null>(null);
   // Whether the user has passed the launch-time hive picker this session. Starts
@@ -468,7 +465,6 @@ export function App() {
 
       {fullscreenAgentId && <FullscreenTerminal config={config} />}
       {fullscreenFilePath && <FullscreenFileEditor />}
-      {ideOpen && <IdePanel />}
       <TaskDetailOverlay />
     </div>
   );

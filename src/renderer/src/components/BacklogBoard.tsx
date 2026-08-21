@@ -42,6 +42,7 @@ export function BacklogBoard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState<string | null>(null); // null = composer closed
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,18 +88,22 @@ export function BacklogBoard() {
     // patchTask's spread merge regardless, so widen at the boundary.
     mutate(() => window.cth.hivePatchTask(id, p as Parameters<typeof window.cth.hivePatchTask>[1]));
 
+  // An inline composer, not window.prompt(): Electron's renderer throws
+  // "prompt() is and will not be supported", so the original + task button was
+  // silently dead — the exception only surfaced when the console was scanned.
   const addTask = (): void => {
-    const title = window.prompt('New task — one line describing the outcome');
-    if (!title?.trim()) return;
+    const title = (draftTitle ?? '').trim();
+    if (!title) return;
     const task = {
       id: newTaskId(),
-      title: title.trim(),
+      title,
       status: 'todo' as const,
       dependsOn: [],
       priority: 0,
       createdAt: new Date().toISOString(),
       ...(activeProjectId ? { projectId: activeProjectId } : {})
     };
+    setDraftTitle(null);
     void mutate(() => window.cth.hiveAddTask(task as Parameters<typeof window.cth.hiveAddTask>[0]));
   };
 
@@ -126,9 +131,32 @@ export function BacklogBoard() {
           color: 'var(--cth-ink-500)'
         }}>{mine.filter((t) => t.status !== 'done').length} open</span>
         <span style={{ marginLeft: 'auto' }}>
-          <PixelButton variant="primary" size="sm" onClick={addTask} disabled={busy}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="plus" /> task</span>
-          </PixelButton>
+          {draftTitle === null ? (
+            <PixelButton variant="primary" size="sm" onClick={() => setDraftTitle('')} disabled={busy}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="plus" /> task</span>
+            </PixelButton>
+          ) : (
+            <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              <input
+                autoFocus
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addTask();
+                  if (e.key === 'Escape') setDraftTitle(null);
+                }}
+                placeholder="one line describing the outcome…"
+                style={{
+                  width: 260, padding: '4px 8px',
+                  fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+                  background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)',
+                  border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', outline: 'none'
+                }}
+              />
+              <PixelButton variant="primary" size="sm" onClick={addTask} disabled={busy || !draftTitle.trim()}>add</PixelButton>
+              <PixelButton variant="secondary" size="sm" onClick={() => setDraftTitle(null)}>cancel</PixelButton>
+            </span>
+          )}
         </span>
       </div>
 

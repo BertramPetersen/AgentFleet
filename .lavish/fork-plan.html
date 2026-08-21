@@ -236,11 +236,12 @@
       <div><strong>Hybrid assignment</strong><br><span style="opacity:.6">rules in main + LLM dispatcher</span></div>
       <div><strong>Backlog stays in the hive</strong><br><span style="opacity:.6">projects.json + additive task fields</span></div>
       <div><strong>Fleet first</strong><br><span style="opacity:.6">then inspector, backlog, needs-you</span></div>
-      <div><strong>Keep the built-in IDE</strong><br><span style="opacity:.6">editor, file tree and git rails</span></div>
+      <div><strong style="text-decoration:line-through">Keep the built-in IDE</strong> → <strong>dropped</strong><br><span style="opacity:.6">reversed after P4 — out of product scope</span></div>
     </div>
     <p class="fp-note" style="margin-top:12px">
-      Seven decisions settled, including keeping the built-in IDE. One approval outstanding — start P0, at the
-      <a href="#decide" style="color:#f4d35e">bottom of the page</a>.
+      P0–P4 shipped as planned. The IDE decision was <strong>reversed after P4</strong>: the built-in editor is out
+      of product scope and was removed. The inspector's diff rail and the terminal-link file viewer stay — supervision
+      surfaces, not an IDE.
     </p>
   </div>
 </header>
@@ -402,10 +403,10 @@ flowchart TD
           <td>useHive is the client-side orchestration loop — 16 effects of hard-won lifecycle handling. Do not rewrite it; lift it out of the floor's assumptions.</td>
         </tr>
         <tr>
-          <td><span class="fp-tag keep">Keep · your call</span></td>
-          <td><code>ide/**</code> — Monaco editor, file tree, tabs, save · <code>components/git/**</code> — commit graph, diffs, branch compare, guarded checkout</td>
-          <td class="num">1,838</td>
-          <td>Kept whole and restyled. The fs/git access is already brokered through main, so this ports without engine changes.</td>
+          <td><span class="fp-tag strip">Deleted in P5</span></td>
+          <td><code>ide/**</code> — Monaco editor, file tree, tabs, save (decision reversed after P4) · <code>components/git/**</code> stays — the inspector's changes tab uses it</td>
+          <td class="num">1,547</td>
+          <td>Out of product scope: the harness supervises code, it does not edit it. Monaco's removal cut the renderer bundle from 10.9&nbsp;MB to 4.3&nbsp;MB.</td>
         </tr>
         <tr>
           <td><span class="fp-tag build">New</span></td>
@@ -828,6 +829,11 @@ days in the interpolation window and re-run the reconciliation.<br>
 
   <!-- ─── E: review & workspace ─── -->
   <h3 style="font-size:17px; font-weight:700; margin:38px 0 4px">E · Review &amp; workspace <span style="opacity:.4; font-weight:400">— read what it actually changed</span></h3>
+  <p class="fp-note" style="max-width:74ch; margin-bottom:10px; color:#ff8a8a">
+    <strong>Partially descoped after P4.</strong> The diff-rail half of this mock shipped in P2 as the inspector's
+    changes tab. The editor half — Monaco, file tree, tabs, save — was dropped with the IDE reversal; review happens
+    in your own editor.
+  </p>
   <p class="fp-note" style="max-width:74ch; margin-bottom:14px">
     You want the built-in IDE kept, so here it is inside the new shell. It earns its place on the supervision
     argument: "is this agent on track" is often really "show me the diff". The editor, file tree, commit graph,
@@ -1123,9 +1129,9 @@ sequenceDiagram
         </tr>
         <tr>
           <td><strong>P5</strong></td>
-          <td><strong>Workspace IDE.</strong> The rest of the built-in IDE, restyled onto the new tokens: file tree, editor tabs and save, the commit graph, branch compare and guarded checkout — reachable from any project or agent, not just the selected one. Consolidate onto one editor stack while we are in here (see risks).</td>
-          <td>Read, edit and review agent work without leaving the app.</td>
-          <td>~1 week</td>
+          <td><strong>Drop the IDE</strong> <em>(scope reversed after P4)</em>. Delete <code>ide/**</code>, every IDE button, the IDE store state, dead <code>FilesTab</code>/<code>FileTree</code>, and the Monaco dependencies. The inspector's diff rail and the terminal-link file viewer stay.</td>
+          <td>The harness supervises code instead of editing it; renderer bundle −60%.</td>
+          <td>done</td>
         </tr>
         <tr>
           <td><strong>P6</strong></td>
@@ -1209,12 +1215,10 @@ sequenceDiagram
     </div>
     <div class="fp-card">
       <span class="fp-tag build">watch</span>
-      <h4>You are keeping two editors, not one</h4>
-      <p>The repo ships <strong>both</strong> stacks: Monaco (<code>monaco-editor</code> +
-      <code>@monaco-editor/react</code>) in <code>ide/**</code>, and CodeMirror
-      (<code>@uiw/react-codemirror</code> plus seven <code>@codemirror/lang-*</code> packages) in
-      <code>CodeEditor.tsx</code> and the trigger JSON editor. Keeping the IDE means picking one in P5 — Monaco, for
-      parity with the diff rails — and porting the two CodeMirror callers over.</p>
+      <h4>You are keeping two editors, not one <span style="opacity:.55">— resolved by the IDE drop</span></h4>
+      <p>The repo shipped <strong>both</strong> stacks. The P5 reversal resolved it in the opposite direction to the
+      original plan: Monaco left with the IDE (it was 60% of the renderer bundle), and CodeMirror stays as the only
+      editor, serving the terminal-link file viewer and the trigger JSON editor.</p>
     </div>
     <div class="fp-card">
       <span class="fp-tag build">watch</span>
@@ -1253,8 +1257,8 @@ sequenceDiagram
             <td>New <code>projects.json</code> plus four optional fields on <code>tasks.json</code>. Single-committer git and the agent-readable audit trail both survive. No external tracker sync in scope.</td></tr>
         <tr><td>Build order</td><td><strong>Fleet → Inspector → Backlog → Needs-you</strong></td>
             <td>Phases re-cut to match. The shell lands with Fleet, so P1 is the first thing you can actually use.</td></tr>
-        <tr><td>Built-in IDE</td><td><strong>Keep it</strong> — editor, file tree and git rails</td>
-            <td>1,838 lines ported and restyled. The read-only diff rail comes early, with the inspector in P2; the full editor and git rails get their own phase, P5. It also means picking one editor stack — the repo currently ships Monaco <em>and</em> CodeMirror.</td></tr>
+        <tr><td>Built-in IDE</td><td><strong style="text-decoration:line-through">Keep it</strong> → <strong>dropped</strong> (reversed after P4)</td>
+            <td>Editing code inside the harness competes with real editors, not with anything supervisory. <code>ide/**</code> and Monaco were removed (−60% renderer bundle); the P2 diff rail and the terminal-link file viewer (CodeMirror) stay. The editor-stack question resolved itself: CodeMirror is the only editor left.</td></tr>
       </tbody>
     </table>
   </div>
