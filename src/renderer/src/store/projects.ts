@@ -40,7 +40,7 @@ export interface ProjectTask {
   title: string;
   description?: string;
   assignee?: string;
-  status: 'todo' | 'doing' | 'blocked' | 'done';
+  status: 'todo' | 'doing' | 'blocked' | 'review' | 'done';
   dependsOn: string[];
   priority: number;
   createdAt: string;
@@ -52,7 +52,7 @@ export interface ProjectTask {
   contract?: TaskContract;
 }
 
-const STATUSES: ProjectTask['status'][] = ['todo', 'doing', 'blocked', 'done'];
+const STATUSES: ProjectTask['status'][] = ['todo', 'doing', 'blocked', 'review', 'done'];
 
 /**
  * Parse AND normalize. tasks.json is not exclusively ours: the orchestrator
