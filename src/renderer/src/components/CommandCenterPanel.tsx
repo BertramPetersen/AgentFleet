@@ -3,6 +3,8 @@ import { PixelPanel } from './PixelPanel';
 import { PixelBadge } from './PixelBadge';
 import { PixelButton } from './PixelButton';
 import { AgentAvatar } from './AgentAvatar';
+import { RealtimeVoiceToggle } from './RealtimeVoiceToggle';
+import { CostHud } from '@/realtime/CostHud';
 import { PtyTerminalView } from './PtyTerminalView';
 import { MessageQueueComposer } from './MessageQueueComposer';
 import { TasksKanban } from './TasksKanban';
@@ -178,6 +180,10 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             agent's queue), and the IDE opens from agent level, not the toolbar.
             Short labels — the tooltips carry the full explanation. */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+          {/* Voice + spend HUD lived on the retired dock card; the orchestrator's
+              own panel header is their natural home. */}
+          <RealtimeVoiceToggle compact />
+          <CostHud compact />
           <PixelButton
             variant={floorDeliveryPaused ? 'primary' : 'secondary'}
             size="sm"

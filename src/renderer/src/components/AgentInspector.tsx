@@ -44,6 +44,7 @@ function compact(n: number): string {
 
 export function AgentInspector({ agent }: { agent: Agent }) {
   const closeInspector = useStore((s) => s.closeInspector);
+  const setAgentNote = useStore((s) => s.setAgentNote);
   const updateAgent = useStore((s) => s.updateAgent);
   const setFullscreen = useStore((s) => s.setFullscreen);
   const fullscreenAgentId = useStore((s) => s.fullscreenAgentId);
@@ -203,6 +204,31 @@ export function AgentInspector({ agent }: { agent: Agent }) {
               {sample ? `${compact(totalTokens(sample))} tokens · ${sample.model || 'model unknown'}` : 'no usage recorded yet'}
             </div>
           </div>
+
+          {!agent.isGod && (
+            <div>
+              <div style={railLabel}>Note</div>
+              {/* The private per-agent note, rehomed from the retired dock card.
+                  A textarea, not an input: the note is a bullet list (one line
+                  per bullet). Writes straight to the store on change — the same
+                  live-save the dock's editor had. */}
+              <textarea
+                rows={3}
+                value={agent.note ?? ''}
+                onChange={(e) => setAgentNote(agent.id, e.target.value)}
+                placeholder="one line per bullet…"
+                aria-label={`Note for ${agent.name}`}
+                style={{
+                  width: '100%', resize: 'vertical', padding: '6px 8px',
+                  borderRadius: 'var(--cth-radius-sm)',
+                  background: 'var(--cth-paper-100)', border: 'none',
+                  boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+                  fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
+                  lineHeight: '17px', color: 'var(--cth-ink-900)', outline: 'none'
+                }}
+              />
+            </div>
+          )}
 
           <div style={{ height: 1, background: 'var(--cth-ink-100)' }} />
 
