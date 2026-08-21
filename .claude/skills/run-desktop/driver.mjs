@@ -106,8 +106,20 @@ const COMMANDS = {
     if (!page) return console.log('ERROR: launch first');
     console.log('click-text', JSON.stringify(text), '→', await page.evaluate((t) => {
       const els = [...document.querySelectorAll('button, a, [role="button"]')];
-      const el = els.find((e) => e.textContent?.trim() === t)
+      let el = els.find((e) => e.textContent?.trim() === t)
         ?? els.find((e) => e.textContent?.includes(t));
+      // This app makes rows and cards clickable as styled DIVs with onClick, so
+      // fall back to the tightest text match and climb to the nearest ancestor
+      // that renders a pointer cursor — that is the element React listens on.
+      if (!el) {
+        const leaf = [...document.querySelectorAll('span, div, td, p')]
+          .filter((e) => e.childElementCount === 0 && e.textContent?.trim() === t)[0]
+          ?? [...document.querySelectorAll('span, div, td, p')]
+            .filter((e) => e.childElementCount === 0 && e.textContent?.includes(t))[0];
+        for (let p2 = leaf; p2; p2 = p2.parentElement) {
+          if (getComputedStyle(p2).cursor === 'pointer') { el = p2; break; }
+        }
+      }
       if (!el) return 'NOT_FOUND';
       el.click();
       return `OK: <${el.tagName.toLowerCase()}> ${el.textContent?.trim().slice(0, 40)}`;
