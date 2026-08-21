@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore, selectedAgent } from '@/store/store';
 import type { HarnessConfig } from '@/store/config';
 import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
-import { AgentRoster } from '@/components/AgentRoster';
+import { FleetTable } from '@/components/FleetTable';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
@@ -338,7 +338,7 @@ export function App() {
         gap: 0
       }}>
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
-          <AgentRoster />
+          <FleetTable />
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (

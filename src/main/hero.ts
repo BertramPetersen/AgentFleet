@@ -12,8 +12,11 @@ import { dirname } from 'node:path';
 import { getText } from './fetchText';
 import { parseHeroPayload, DEFAULT_HERO, type HeroPayload } from '../shared/heroPayload';
 
+// Fork note: this pointed at chaitanyagiri/munder-difflin, so AgentFleet rendered
+// whatever plan copy and sponsors UPSTREAM published, refreshed every 6 hours.
+// Pointed at this fork's own docs/hero.json instead.
 const HERO_URL =
-  'https://raw.githubusercontent.com/chaitanyagiri/munder-difflin/main/docs/hero.json';
+  'https://raw.githubusercontent.com/BertramPetersen/AgentFleet/main/docs/hero.json';
 /** Plan copy and sponsors change on a human timescale. */
 const TTL_MS = 6 * 60 * 60 * 1000;
 

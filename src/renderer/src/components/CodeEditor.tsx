@@ -12,29 +12,31 @@ import { css } from '@codemirror/lang-css';
 import { yaml } from '@codemirror/lang-yaml';
 import { Icon } from './Icon';
 import { PixelButton } from './PixelButton';
+import { lightSurfaces } from '@/design/surfaces';
 
-// ─── Theme matching CTH palette ─────────────────────────────────────────────
+// Surfaces come from design/surfaces (one restatement for every canvas editor);
+// only the syntax hues below are CodeMirror's own.
 const cthEditorTheme = EditorView.theme({
   '&': {
-    background: '#FCFAF0',
-    color: '#1A1320',
+    background: lightSurfaces.bg,
+    color: lightSurfaces.fg,
     height: '100%',
-    fontFamily: 'VT323, "JetBrains Mono", monospace',
-    fontSize: '16px'
+    fontFamily: '"JetBrains Mono", ui-monospace, Menlo, monospace',
+    fontSize: '13px'
   },
-  '.cm-content': { caretColor: '#FF6B6B', padding: '8px 0' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#FF6B6B', borderLeftWidth: '2px' },
+  '.cm-content': { caretColor: lightSurfaces.cursor, padding: '8px 0' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: lightSurfaces.cursor, borderLeftWidth: '2px' },
   '.cm-scroller': { fontFamily: 'inherit', overflow: 'auto' },
   '.cm-gutters': {
-    background: '#F0EAD2',
-    color: '#6B5878',
-    borderRight: '1px solid #D9CFE0'
+    background: lightSurfaces.bgAlt,
+    color: lightSurfaces.fgFaint,
+    borderRight: `1px solid ${lightSurfaces.divider}`
   },
-  '.cm-activeLineGutter': { background: '#FFEC99' },
-  '.cm-activeLine': { background: 'rgba(255, 217, 61, 0.10)' },
-  '.cm-selectionBackground, ::selection': { background: '#FFEC99 !important' },
-  '.cm-searchMatch': { background: '#A8E6E0', outline: '1px solid #1A1320' },
-  '.cm-searchMatch.cm-searchMatch-selected': { background: '#FFD93D' }
+  '.cm-activeLineGutter': { background: lightSurfaces.activeLine },
+  '.cm-activeLine': { background: lightSurfaces.activeLine },
+  '.cm-selectionBackground, ::selection': { background: `${lightSurfaces.selection} !important` },
+  '.cm-searchMatch': { background: '#CFE5E9', outline: `1px solid ${lightSurfaces.border}` },
+  '.cm-searchMatch.cm-searchMatch-selected': { background: '#F3E4BC' }
 }, { dark: false });
 
 const cthSyntax = HighlightStyle.define([

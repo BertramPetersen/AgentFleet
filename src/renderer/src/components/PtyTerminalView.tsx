@@ -12,6 +12,7 @@ import {
   useTerminalFontSize
 } from './terminalFontSize';
 import { useAppTheme } from '@/design/theme';
+import { lightSurfaces, darkSurfaces } from '@/design/surfaces';
 
 // Zoom lives in ./terminalFontSize so anything outside the terminal (the message
 // composer) can scale with it too; these aliases keep the call sites below short.
@@ -51,28 +52,28 @@ const zoomBtnStyle: CSSProperties = {
 // green/yellow are kept deep enough to read as text on cream (the brighter
 // variants are the lighter shades, per terminal convention).
 const lightTheme = {
-  background: '#FCFAF0',
-  foreground: '#1A1320',
-  cursor: '#D96A62',
-  cursorAccent: '#FCFAF0',
-  selectionBackground: '#FFEC99',
-  selectionForeground: '#1A1320',
-  black:        '#1A1320',
+  background: lightSurfaces.bg,
+  foreground: lightSurfaces.fg,
+  cursor: lightSurfaces.cursor,
+  cursorAccent: lightSurfaces.bg,
+  selectionBackground: lightSurfaces.selection,
+  selectionForeground: lightSurfaces.selectionFg,
+  black:        lightSurfaces.fg,
   red:          '#D1453B',
   green:        '#20904B',    // deep green → readable as text on cream
   yellow:       '#9C6B00',    // deep amber → readable as text on cream
   blue:         '#2B6CB0',
   magenta:      '#8A5CF0',
   cyan:         '#1F9C94',
-  white:        '#3A2F44',   // default "white" text → dark, so it's visible
-  brightBlack:  '#6B5878',
+  white:        lightSurfaces.fgDim,   // default "white" text → dark, so it's visible
+  brightBlack:  lightSurfaces.fgFaint,
   brightRed:    '#E0584E',
   brightGreen:  '#2E9E54',
   brightYellow: '#B8860B',
   brightBlue:   '#3B7DC4',
   brightMagenta:'#9B72F2',
   brightCyan:   '#2BA89F',
-  brightWhite:  '#1A1320'
+  brightWhite:  lightSurfaces.fg
 };
 
 // Dark theme — mirrors the app's dark surface ramp (tokens.css
@@ -84,13 +85,13 @@ const lightTheme = {
 // apart from the panel holding it. Muted-professional ANSI: recognizable hues, no
 // fluorescing on the dark ground; brights are one legible step up, not pastels.
 const darkTheme = {
-  background: '#1A1A1F',        // = --cth-paper-100
-  foreground: '#DEDBD6',        // = --cth-ink-900
-  cursor: '#E08C82',
-  cursorAccent: '#1A1A1F',
-  selectionBackground: '#37363F',
-  selectionForeground: '#DEDBD6',
-  black:        '#222229',
+  background: darkSurfaces.bg,
+  foreground: darkSurfaces.fg,
+  cursor: darkSurfaces.cursor,
+  cursorAccent: darkSurfaces.bg,
+  selectionBackground: darkSurfaces.selection,
+  selectionForeground: darkSurfaces.selectionFg,
+  black:        darkSurfaces.bgAlt,
   red:          '#E08C82',
   green:        '#74C096',
   yellow:       '#CFAA57',
