@@ -8,8 +8,7 @@ import { MessageQueueComposer } from './MessageQueueComposer';
 import { AgentControlStrip } from './AgentControlStrip';
 import { CommandCenterPanel } from './CommandCenterPanel';
 import { Icon } from './Icon';
-import { SpritePortrait } from './SpritePortrait';
-import { PORTRAIT_W } from '@/scene/office/portraitArt';
+import { AgentAvatar, AVATAR_UNIT } from './AgentAvatar';
 import { RealtimeMichaelToggle } from './RealtimeMichaelToggle';
 import { CostHud } from '@/realtime/CostHud';
 import { useStore, type Agent } from '@/store/store';
@@ -48,7 +47,7 @@ function rosterScale(zoom: number) {
     group: clamp(zoom * 0.45, 7, 13),
     note: clamp(zoom * 0.68, 10, 20),
     portraitScale,
-    portrait: Math.round(PORTRAIT_W * portraitScale)
+    portrait: Math.round(AVATAR_UNIT * portraitScale)
   };
 }
 
@@ -710,7 +709,7 @@ function SidebarRow({
         }}>
           {/* The sprite is drawn at exactly the tile's width, so the figure
               grows with the tile instead of floating in it. */}
-          <SpritePortrait character={agent.character} scale={scale.portraitScale} />
+          <AgentAvatar name={agent.name} accent={agent.accent} scale={scale.portraitScale} />
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>

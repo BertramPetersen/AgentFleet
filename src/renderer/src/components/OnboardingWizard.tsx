@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { Icon, type IconName } from './Icon';
-import { SpritePortrait } from './SpritePortrait';
+import { AgentAvatar } from './AgentAvatar';
 import { ProviderLogo } from './ProviderLogo';
 import { AGENT_PROVIDER_PRESETS, modelsForProvider, type AgentProvider, type HarnessConfig } from '@/store/config';
 import { canReceiveInbox, providerPreset } from '@shared/agentProvider';
@@ -227,14 +227,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     boxShadow: 'inset 0 0 0 1.5px var(--cth-ink-500)',
                     display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden'
                   }}>
-                    <SpritePortrait character="michael" scale={2} />
+                    <AgentAvatar name="Michael" accent="lemon" scale={2} />
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--cth-font-display)', fontSize: 12, lineHeight: '18px' }}>
                       A CLONE OF YOU, WORKING 24/7
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--cth-ink-700)', lineHeight: '19px' }}>
-                      Munder Difflin turns the CLI agent you already use into a clone of you —
+                      AgentFleet turns the CLI agent you already use into a clone of you —
                       one that runs an office of long-running agents and keeps working while
                       you're away. It manages everything around them: context, memory, tasks,
                       triggers, environment, files, and integrations.
@@ -274,7 +274,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     boxShadow: 'inset 0 0 0 1.5px var(--cth-ink-500)',
                     display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden'
                   }}>
-                    <SpritePortrait character="michael" scale={2} />
+                    <AgentAvatar name="Michael" accent="lemon" scale={2} />
                   </div>
                   <div>
                     <div style={{
@@ -617,7 +617,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <ToggleRow
                   icon="info"
                   label="SHARE ANONYMOUS USAGE STATS"
-                  desc="A handful of anonymous events (app opened, agent spawned, feature used) that help improve Munder Difflin — never prompts, code, file paths, or agent output. Full list in TELEMETRY.md; change anytime in Settings."
+                  desc="A handful of anonymous events (app opened, agent spawned, feature used) that help improve AgentFleet — never prompts, code, file paths, or agent output. Full list in TELEMETRY.md; change anytime in Settings."
                   on={shareStats}
                   tint="var(--cth-lemon-light)"
                   edge="var(--cth-lemon)"

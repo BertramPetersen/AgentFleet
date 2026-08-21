@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PixelPanel } from './PixelPanel';
 import { PixelBadge } from './PixelBadge';
 import { PixelButton } from './PixelButton';
-import { SpritePortrait } from './SpritePortrait';
+import { AgentAvatar } from './AgentAvatar';
 import { PtyTerminalView } from './PtyTerminalView';
 import { terminalInstanceKey } from './terminalRecovery';
 import { MessageQueueComposer } from './MessageQueueComposer';
@@ -98,7 +98,7 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden',
           flexShrink: 0
         }}>
-          <SpritePortrait character={agent.character} scale={1} />
+          <AgentAvatar name={agent.name} accent={agent.accent} scale={1} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{

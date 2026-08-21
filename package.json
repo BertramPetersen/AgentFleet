@@ -1,14 +1,13 @@
 {
-  "name": "munder-difflin",
+  "name": "agentfleet",
   "version": "0.4.4",
   "private": true,
-  "description": "Clones for you and your team, working 24/7 — a free, local-first multi-agent harness that turns the CLI coding agent you already run into a clone of you, coordinating an office of agents on your machine.",
+  "description": "A local-first multi-agent harness for real work: projects, backlogs, and a supervision surface over the CLI coding agents you already run. Forked from munder-difflin.",
   "main": "out/main/index.js",
   "author": "Chaitanya Giri",
-  "homepage": "https://munderdiffl.in/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chaitanyagiri/munder-difflin.git"
+    "url": "https://github.com/OWNER-TBD/agentfleet.git"
   },
   "scripts": {
     "dev": "electron-vite dev",
@@ -51,7 +50,6 @@
     "localtunnel": "^2.0.2",
     "monaco-editor": "^0.52.2",
     "node-pty": "^1.0.0",
-    "pixi.js": "^8.5.1",
     "posthog-node": "^5.48.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

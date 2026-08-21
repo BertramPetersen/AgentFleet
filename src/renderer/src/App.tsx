@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useStore, selectedAgent } from '@/store/store';
-import { startMockLoop, stopMockLoop } from '@/store/mockEvents';
 import type { HarnessConfig } from '@/store/config';
 import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
-import { OfficeFloor } from '@/scene/office/OfficeFloor';
+import { AgentRoster } from '@/components/AgentRoster';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
@@ -28,7 +27,6 @@ import { TaskDetailOverlay } from '@/components/TaskDetailOverlay';
 import { FullscreenFileEditor } from '@/components/FullscreenFileEditor';
 import { IdePanel } from '@/ide/IdePanel';
 import { useHoldOptionToTalk } from '@/freeflow/holdOption';
-import brandLogo from '@brand/logo.png?url';
 
 // Injected at build time from package.json (see electron.vite.config.ts).
 declare const __APP_VERSION__: string;
@@ -98,9 +96,6 @@ export function App() {
       // show the voice button disabled-with-tooltip when Free Flow is on but no
       // Groq key is set (Settings keeps this in sync on save).
       useStore.getState().setHasGroqKey(!!c.groqApiKey);
-      // Mirror the active office theme so OfficeFloor renders it (gated on the
-      // tvShowOffices flag; off = always the office). Settings keeps this synced.
-      useStore.getState().setOfficeTheme(c.tvShowOffices ? (c.officeTheme ?? 'office') : 'office');
       // Mirror the triggers so Settings → Connections and the Command Center's
       // Triggers tab read one list, not two copies that drift — whichever surface
       // saves calls these same setters and the other repaints. No extra IPC: main
@@ -182,24 +177,6 @@ export function App() {
     for (const a of agents) if (a.ptyId) acquireTerminal(a.ptyId);
   }, [agents]);
 
-  // Synthetic demo loop — CAGED (#5B). It must never animate alongside a live
-  // hive (it would fire fake envelope handoffs and step seeded agents). Run it
-  // only as an explicit showcase (VITE_CTH_DEMO=1 in dev) or on a genuinely
-  // empty floor, and stop it the instant the first real PTY agent appears
-  // (Michael always spawns, so in normal operation it effectively never runs).
-  useEffect(() => {
-    if (!config?.onboardingComplete) return;
-    const DEMO = import.meta.env.DEV && import.meta.env.VITE_CTH_DEMO === '1';
-    const evaluate = () => {
-      const hasLive = useStore.getState().agents.some((a) => a.ptyId);
-      if (DEMO || !hasLive) startMockLoop();
-      else stopMockLoop();
-    };
-    evaluate();
-    const unsub = useStore.subscribe(evaluate);
-    return () => { unsub(); stopMockLoop(); };
-  }, [config?.onboardingComplete]);
-
   // Reconcile restored agents against the PTYs still alive in the main process.
   // After a renderer reload (e.g. the laptop slept and Vite reloaded the page),
   // this keeps agents whose process survived and drops any that truly died.
@@ -263,11 +240,12 @@ export function App() {
           userSelect: 'none'
         }}
       >
-        <img
-          src={brandLogo}
-          alt="Munder Difflin"
-          style={{ height: 20, width: 'auto', display: 'block' }}
-        />
+        <span style={{
+          fontFamily: 'var(--cth-font-display)',
+          fontSize: 'var(--cth-text-display-sm)',
+          color: 'var(--cth-ink-900)',
+          letterSpacing: 0
+        }}>AgentFleet</span>
         {/* v0.3.7: the version is no longer inert text — it doubles as the
             update control (check / download / restart to update). */}
         <UpdateBadge />
@@ -360,7 +338,7 @@ export function App() {
         gap: 0
       }}>
         <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
-          <OfficeFloor />
+          <AgentRoster />
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (
@@ -370,10 +348,10 @@ export function App() {
               pointerEvents: 'none'
             }}>
               <div style={{ pointerEvents: 'auto', width: 360 }}>
-                <PixelPanel variant="dialog" title="EMPTY FLOOR" noPadding>
+                <PixelPanel variant="dialog" title="NO AGENTS" noPadding>
                   <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <p style={{ margin: 0, fontSize: 13, lineHeight: '20px' }}>
-                      No agents on the floor yet. Spawn one to see real claude output stream in here.
+                      No agents yet. Spawn one to see its real output stream in here.
                     </p>
                     <PixelButton variant="primary" size="md" onClick={() => setAddAgentOpen(true)}>
                       <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
