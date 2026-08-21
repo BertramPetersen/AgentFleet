@@ -52,11 +52,36 @@ export interface ProjectTask {
   contract?: TaskContract;
 }
 
+const STATUSES: ProjectTask['status'][] = ['todo', 'doing', 'blocked', 'done'];
+
+/**
+ * Parse AND normalize. tasks.json is not exclusively ours: the orchestrator
+ * edits it directly on disk, and a hand-written card carries only the fields
+ * its author thought of. Every view renders whatever this returns, so missing
+ * fields are made safe HERE — a card without `dependsOn` once unmounted the
+ * whole app from a single `.length` in a row renderer.
+ */
 export function parseTasks(raw: unknown): ProjectTask[] {
   const list = (raw && typeof raw === 'object' && Array.isArray((raw as { tasks?: unknown }).tasks))
-    ? (raw as { tasks: ProjectTask[] }).tasks
+    ? (raw as { tasks: unknown[] }).tasks
     : [];
-  return list.filter((t): t is ProjectTask => !!t && typeof t === 'object' && typeof t.id === 'string');
+  return list
+    .filter((t): t is Record<string, unknown> =>
+      !!t && typeof t === 'object' && typeof (t as { id?: unknown }).id === 'string')
+    .map((t) => ({
+      ...(t as unknown as ProjectTask),
+      id: t.id as string,
+      title: typeof t.title === 'string' ? t.title : String(t.id),
+      status: STATUSES.includes(t.status as ProjectTask['status']) ? (t.status as ProjectTask['status']) : 'todo',
+      dependsOn: Array.isArray(t.dependsOn) ? (t.dependsOn as unknown[]).filter((d): d is string => typeof d === 'string') : [],
+      priority: typeof t.priority === 'number' && Number.isFinite(t.priority) ? t.priority : 0,
+      createdAt: typeof t.createdAt === 'string' ? t.createdAt : '',
+      humanQA: Array.isArray(t.humanQA)
+        ? (t.humanQA as unknown[]).filter((q): q is NonNullable<ProjectTask['humanQA']>[number] =>
+            !!q && typeof q === 'object' && typeof (q as { q?: unknown }).q === 'string')
+        : undefined,
+      labels: Array.isArray(t.labels) ? (t.labels as unknown[]).filter((l): l is string => typeof l === 'string') : undefined
+    }));
 }
 
 /**
