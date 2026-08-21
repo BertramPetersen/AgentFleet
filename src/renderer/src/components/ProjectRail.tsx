@@ -29,12 +29,18 @@ export function ProjectRail() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
+  // Durable per-project spend from the cost ledger — the same number the
+  // over-budget dispatch rule reads, so what the rail shows is what the rules
+  // enforce. (The fleet's per-agent $ stays session telemetry; a project's $ is
+  // a budget question and budgets survive restarts.)
+  const [spend, setSpend] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let alive = true;
     const read = (): void => {
       window.cth.projectsList?.().then((list) => { if (alive) setProjects(list ?? []); }).catch(() => { /* hive off */ });
       window.cth.hiveTasks?.().then((raw) => { if (alive) setTasks(parseTasks(raw)); }).catch(() => { /* hive off */ });
+      window.cth.projectsSpend?.().then((m) => { if (alive) setSpend(m ?? {}); }).catch(() => { /* hive off */ });
     };
     read();
     const t = setInterval(read, POLL_MS);
@@ -112,16 +118,19 @@ export function ProjectRail() {
       />
       {visible.map((p, i) => {
         const s = stats(p);
+        const usd = spend[p.id] ?? 0;
+        const over = !!p.budgetUsd && p.budgetUsd > 0 && usd >= p.budgetUsd;
         return (
           <RailItem
             key={p.id}
             label={p.name}
-            title={`${p.repoPath}${p.isolation === 'worktree-per-agent' ? ' · worktree per agent' : ''}`}
+            title={`${p.repoPath}${p.isolation === 'worktree-per-agent' ? ' · worktree per agent' : ''}${p.budgetUsd ? ` · $${usd.toFixed(2)} of $${p.budgetUsd.toFixed(2)} budget${over ? ' — over, dispatch paused' : ''}` : ''}`}
             dot={`var(--cth-${DOT_ACCENTS[i % DOT_ACCENTS.length]})`}
             count={s.agents}
             on={activeProjectId === p.id}
             onClick={() => setActiveProject(p.id)}
-            sub={s.usd > 0 ? `$${s.usd.toFixed(2)}` : undefined}
+            sub={usd > 0 ? `$${usd.toFixed(2)}` : undefined}
+            subAlert={over}
           />
         );
       })}
@@ -166,7 +175,7 @@ function RailHead({ children }: { children: React.ReactNode }) {
 }
 
 function RailItem({
-  label, count, on, onClick, icon, dot, sub, alert, title
+  label, count, on, onClick, icon, dot, sub, alert, subAlert, title
 }: {
   label: string;
   count?: number;
@@ -176,6 +185,8 @@ function RailItem({
   dot?: string;
   sub?: string;
   alert?: boolean;
+  /** Paint the sub (the $ figure) in the blocked tone — over budget. */
+  subAlert?: boolean;
   title?: string;
 }) {
   return (
@@ -200,7 +211,7 @@ function RailItem({
       {sub && (
         <span style={{
           fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
-          color: 'var(--cth-ink-500)'
+          color: subAlert ? 'var(--cth-status-blocked)' : 'var(--cth-ink-500)'
         }}>{sub}</span>
       )}
       {count !== undefined && (
