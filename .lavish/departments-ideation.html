@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Departments — Compliance & Canvas</title>
+<style>
+  /* AgentFleet's own design system — the artifact proposes AgentFleet features,
+     so it wears the product's tokens (committed dark). */
+  :root {
+    --bg: #0D1117; --below: #0A0D12; --s1: #141A21; --s2: #1A222B; --s3: #212A35;
+    --bd: #2A3441; --bd2: #3A4654;
+    --tx: #E7EBF0; --dim: #95A2B3; --dim2: #6D7A89;
+    --acc: #F4D35E; --on-acc: #231D05;
+    --ok: #5FC98A; --err: #FF8A8A; --warn: #FFB84D; --think: #4ECDC4; --purple: #9B7EDE; --link: #6C8EF5;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ui: "Inter", ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; min-width: 0; }
+  html { background: var(--bg); color-scheme: dark; }
+  body { margin: 0; font-family: var(--ui); font-size: 14px; line-height: 1.55; color: var(--tx); background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 120px; }
+  h1 { font-size: 26px; letter-spacing: -0.02em; margin: 6px 0 8px; }
+  h2 { font-size: 19px; letter-spacing: -0.01em; margin: 0 0 4px; }
+  h3 { font-size: 14px; margin: 22px 0 8px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim2); font-weight: 650; }
+  .lede { color: var(--dim); max-width: 76ch; }
+  .muted { color: var(--dim2); font-size: 12.5px; }
+  section.feature { margin-top: 48px; border-top: 1px solid var(--bd); padding-top: 28px; }
+  .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); margin: 14px 0; }
+  .card { background: var(--s1); border: 1px solid var(--bd); border-radius: 10px; padding: 14px 16px; }
+  .card h4 { margin: 0 0 6px; font-size: 13px; }
+  .card p { margin: 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+  .tag { display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+         padding: 2px 8px; border-radius: 999px; margin-bottom: 8px; }
+  .tag.adopt { background: #082115; color: var(--ok); border: 1px solid #1F4A33; }
+  .tag.build { background: #241F08; color: var(--acc); border: 1px solid #5C4F1A; }
+  .tag.reuse { background: #07211F; color: var(--think); border: 1px solid #1D4A47; }
+  .tag.skip  { background: #10141A; color: var(--dim2); border: 1px solid var(--bd); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 12px 0; }
+  th { text-align: left; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim2); padding: 0 12px 8px; white-space: nowrap; }
+  td { padding: 9px 12px; border-top: 1px solid var(--bd); vertical-align: top; line-height: 1.5; }
+  .scroll { overflow-x: auto; }
+  code { font-family: var(--mono); font-size: 11.5px; background: var(--s2); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--s2); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 14px; overflow-x: auto;
+        font-family: var(--mono); font-size: 11.5px; line-height: 1.6; }
+  pre code { background: transparent; padding: 0; }
+  .mermaid { background: var(--s1); border: 1px solid var(--bd); border-radius: 10px; padding: 14px; overflow-x: auto; margin: 14px 0; }
+  .ev { font-family: var(--mono); font-size: 11px; color: var(--dim2); }
+  .stat { display: inline-flex; flex-direction: column; gap: 2px; background: var(--s1); border: 1px solid var(--bd);
+          border-radius: 8px; padding: 10px 16px; margin: 0 8px 8px 0; }
+  .stat b { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 11px; color: var(--dim2); }
+  form.q { border: 1px solid var(--bd2); border-radius: 10px; padding: 16px 18px; margin: 18px 0; background: var(--s1); }
+  form.q legend, form.q .qtitle { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  form.q .qwhy { font-size: 12px; color: var(--dim2); margin: 0 0 10px; }
+  form.q label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  form.q label:hover { background: var(--s2); }
+  form.q input[type=radio] { margin-top: 3px; accent-color: var(--acc); }
+  form.q b { font-size: 12.5px; font-weight: 650; }
+  form.q i { display: block; font-style: normal; font-size: 11.5px; color: var(--dim2); line-height: 1.5; }
+  form.q button { margin-top: 10px; background: var(--acc); color: var(--on-acc); border: none; border-radius: 6px;
+                  padding: 6px 14px; font-family: var(--ui); font-size: 12px; font-weight: 650; cursor: pointer; }
+  .rec { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: var(--acc); margin-left: 6px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
+  .pill.ok { color: var(--ok); background: #082115; border: 1px solid #1F4A33; }
+  .pill.err { color: var(--err); background: #260C0C; border: 1px solid #5C2626; }
+  textarea.freeform { width: 100%; min-height: 84px; background: var(--s2); color: var(--tx); border: 1px solid var(--bd2);
+                      border-radius: 8px; padding: 10px 12px; font-family: var(--ui); font-size: 13px; resize: vertical; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">AgentFleet · ideation · 2026-08-21 · DECIDED</div>
+  <h1>Two departments</h1>
+  <div class="card" style="margin:14px 0; border-color: var(--bd2)">
+    <h4>Decisions (2026-08-21, terminal session)</h4>
+    <p>
+      <b>D1</b> fleet-native compliance agents (adopt no-mistakes patterns, not its binary) ·
+      <b>D2</b> handoff at PR creation: the author agent opens the PR, a compliance agent takes the review over, the author returns to the hive ·
+      <b>D3</b> global preference ledger with per-project overlay entries ·
+      <b>D4</b> NO Lavish embedding — the canvas is native to the Electron app: agents write HTML artifacts into a designated folder (many per agent), the canvas renders them, no external browser ever spins up ·
+      <b>D5</b> superseded by D4's shape: a Canvas workspace view listing artifacts, agent/project-scoped.
+    </p>
+  </div>
+  <p class="lede">
+    Both proposals were shaped by reading the two tools already on this machine: <code>no-mistakes</code>
+    (a compiled git-proxy review gate — its behavior, config, and SQLite state were inspected, plus your real
+    usage stats) and <code>lavish-axi</code> (MIT-licensed Node source, fully readable). Each section says what
+    we adopt, what we reuse literally, and what only AgentFleet can add — then asks for the decisions.
+  </p>
+
+  <!-- ══════════════════ FEATURE 1 ══════════════════ -->
+  <section class="feature">
+    <div class="eyebrow">Feature 1</div>
+    <h2>Compliance Department — review agents that remember how you like your code</h2>
+    <p class="lede">
+      Every PR the fleet produces is handed to compliance agents before you see it. They review against a
+      <em>preference ledger</em> — a durable, evidence-backed record of how you like code written — and every
+      review outcome updates that ledger. The fleet maximises throughput; compliance keeps the bar.
+    </p>
+
+    <h3>What no-mistakes proves on your own machine</h3>
+    <div>
+      <span class="stat"><b>81</b><span>gated pushes · 18 repos</span></span>
+      <span class="stat"><b>42%</b><span>rescue rate (caught + fixed)</span></span>
+      <span class="stat"><b>202</b><span>fixes from the review step alone</span></span>
+      <span class="stat"><b>64%</b><span>of reported mistakes fixed</span></span>
+    </div>
+    <p class="muted">From <code>no-mistakes stats</code> — the review-agent approach already earns its keep here.</p>
+
+    <h3>Its approaches, sorted</h3>
+    <div class="scroll"><table>
+      <tr><th>no-mistakes approach</th><th>verdict</th><th>why</th></tr>
+      <tr>
+        <td><b>Intent-fed review</b> — mines your local agent transcripts to learn what you <em>meant</em>, feeds it to reviewers</td>
+        <td><span class="tag adopt">adopt — we do it better</span></td>
+        <td>AgentFleet already has structured intent on every card: the dispatch contract
+            (<code>objective / output / tools / boundaries</code>). Compliance reviews <em>against the contract</em> —
+            "does this deliver the OUTPUT within the BOUNDARIES?" — no transcript mining needed.</td>
+      </tr>
+      <tr>
+        <td><b>Finding schema</b> — <code>{id, severity, file, line, description, action}</code> with per-step auto-fix budgets</td>
+        <td><span class="tag adopt">adopt</span></td>
+        <td>Proven shape (from its SQLite: real findings carry exactly this). Findings become hive data on the review card,
+            so the backlog, Needs-you, and the learning loop all read one format. Auto-fix budgets cap runaway fix loops —
+            same philosophy as our breaker.</td>
+      </tr>
+      <tr>
+        <td><b>Eval loop with reality-gold</b> — capture review passes; confirmed post-PR misses become false-negative gold;
+            relabel when the PR merges; replay to score reviewer candidates</td>
+        <td><span class="tag adopt">adopt</span></td>
+        <td>This is our P6 replay-harness philosophy applied to review quality. The hive already records everything needed;
+            <code>npm run replay</code> grows a sibling: replay captured reviews against gold before changing a reviewer prompt.</td>
+      </tr>
+      <tr>
+        <td><b>Approval gates</b> — the pipeline blocks at decision points until a human responds</td>
+        <td><span class="tag adopt">adopt via Needs-you</span></td>
+        <td>We already have the only interrupt queue that should ever reach you. A compliance verdict that needs a human
+            ("this violates a boundary — override or fix?") is a <code>humanQA</code> ask, frozen-dependents and all.</td>
+      </tr>
+      <tr>
+        <td><b>Git-proxy gate</b> — a local bare repo + post-receive hook intercepts the push itself</td>
+        <td><span class="tag skip">decision 2</span></td>
+        <td>Strongest guarantee (nothing reaches the remote unreviewed) but heavy machinery. AgentFleet can gate at the
+            card level instead: a work card cannot reach <code>done</code> until its review card is approved.</td>
+      </tr>
+      <tr>
+        <td><b>Persistent preference memory</b></td>
+        <td><span class="tag build">absent — the department's core</span></td>
+        <td>no-mistakes learns review <em>quality</em> (its evals) but not <em>your taste</em>. This is the gap the
+            Compliance Department exists to fill.</td>
+      </tr>
+    </table></div>
+
+    <h3>Architecture — riding what P3–P7 already built</h3>
+    <div class="mermaid">
+flowchart LR
+  W["work card<br/>reaches review"] --> RC["review card auto-created<br/>labels: [compliance]<br/>dependsOn: work card"]
+  RC --> RULES["P6 assignment rules<br/>capability match routes it"]
+  RULES --> CA["compliance agent<br/>role: compliance<br/>spawn prompt includes<br/>PREFERENCES.md"]
+  CA --> F["findings on the card<br/>{id, severity, file, line,<br/>description, action}"]
+  F -->|clean| OK["verdict: approved<br/>work card → done"]
+  F -->|violations| FIX["auto-fix budget<br/>or bounce to author agent"]
+  F -->|judgment call| NY["Needs-you ask<br/>override or fix?"]
+  NY -->|"human overrides<br/>a finding"| LEARN["preference ledger<br/>compliance/preferences.jsonl"]
+  M["post-merge reality:<br/>human edits agent code"] --> LEARN
+  LEARN -->|"injected at spawn"| CA
+  LEARN -->|"repeatedly overridden<br/>rules decay + retire"| LEARN
+    </div>
+
+    <h3>The preference ledger — memory that earns its place</h3>
+    <p class="lede" style="font-size:13px">
+      Lives in the hive (<code>compliance/preferences.jsonl</code> + a generated <code>PREFERENCES.md</code>),
+      git-tracked by the single committer, so every learned preference has an audit trail. Injected into compliance
+      agents at spawn exactly like <code>identity.md</code> is today.
+    </p>
+    <pre><code>{ "id": "no-doc-comments",
+  "rule": "No reflexive doc comments — comments only for non-obvious WHY, invariants, workarounds",
+  "rationale": "stated in global CLAUDE.md; confirmed by 3 review overrides",
+  "evidence": ["PR#4 override", "PR#7 human edit a3f1c92", "global-claude-md"],
+  "confidence": 0.92, "applied": 14, "overridden": 0, "scope": "global" }</code></pre>
+    <div class="cards">
+      <div class="card"><span class="tag build">learning loop 1 — explicit</span>
+        <h4>Human overrides a finding</h4>
+        <p>You dismiss or override a compliance finding in Needs-you → the override text becomes a preference entry
+           (or strengthens/weakens an existing one). Nothing is learned silently — the entry cites the override.</p></div>
+      <div class="card"><span class="tag build">learning loop 2 — implicit</span>
+        <h4>Post-merge corrections mined</h4>
+        <p>When you hand-edit agent-written code after approval, a compliance agent diffs your correction against what
+           was approved and proposes a preference ("Bertram rewrote X as Y — candidate rule?"). Proposals land in
+           Needs-you; only confirmed ones enter the ledger. Mirrors no-mistakes' <code>eval miss</code> ingestion.</p></div>
+      <div class="card"><span class="tag build">forgetting — as important</span>
+        <h4>Overridden rules decay</h4>
+        <p>Every entry tracks <code>applied</code> vs <code>overridden</code>. A rule you keep overriding loses
+           confidence and retires — the ledger converges on how you actually review, not on what it once guessed.
+           Mirrors no-mistakes' relabel-on-merge.</p></div>
+    </div>
+
+    <form class="q" data-lavish-question="compliance-engine"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('engine'); if (v) window.lavish.queuePrompt('Compliance execution engine: ' + v, { tag: 'choice', text: 'D1 engine: ' + v, element: event.currentTarget, data: { question: 'compliance-engine', answer: v } });">
+      <div class="qtitle">Decision 1 — who executes the review?</div>
+      <p class="qwhy">All three keep the preference ledger and learning loops in AgentFleet; they differ in who runs the review pass.</p>
+      <label><input type="radio" name="engine" value="fleet-native: our own compliance agents, adopting no-mistakes patterns (finding schema, auto-fix budgets, eval loop)">
+        <span><b>Fleet-native</b><span class="rec">recommended</span>
+        <i>Compliance agents are ordinary fleet agents (role: compliance) — dogfoods dispatch/inspect/steer/budgets on them,
+           reviews against the card's contract, one system. We adopt no-mistakes' <em>patterns</em>, not its binary.</i></span></label>
+      <label><input type="radio" name="engine" value="shell out: compliance agents drive `no-mistakes axi run` in gated repos">
+        <span><b>Shell out to no-mistakes</b>
+        <i>Reuses 81-runs-proven pipeline + its evals wholesale; but review then happens outside the hive (no contract awareness,
+           preference ledger only reachable as a repo guidelines file), and it's coupled to a closed binary.</i></span></label>
+      <label><input type="radio" name="engine" value="hybrid: fleet-native department; where a repo is already no-mistakes-gated, compliance drives that pipeline and ingests its findings into the hive format">
+        <span><b>Hybrid</b>
+        <i>Fleet-native by default; repos already gated by no-mistakes keep their gate, and compliance ingests those findings
+           into the same hive format. Most machinery, most coverage.</i></span></label>
+      <button type="submit">Queue this answer</button>
+    </form>
+
+    <form class="q" data-lavish-question="compliance-gate"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('gate'); if (v) window.lavish.queuePrompt('Compliance gate placement: ' + v, { tag: 'choice', text: 'D2 gate: ' + v, element: event.currentTarget, data: { question: 'compliance-gate', answer: v } });">
+      <div class="qtitle">Decision 2 — where does the gate sit?</div>
+      <p class="qwhy">What physically prevents unreviewed work from shipping.</p>
+      <label><input type="radio" name="gate" value="card gate: a work card cannot reach done until its review card is approved; the dispatcher prompt + rules enforce it">
+        <span><b>Card gate</b><span class="rec">recommended</span>
+        <i>Pure hive mechanics — the rules refuse to close unreviewed work, the board shows "in review" honestly.
+           An agent pushing directly to a remote is still possible but visible.</i></span></label>
+      <label><input type="radio" name="gate" value="push gate: adopt the git-proxy trick (local bare repo + post-receive hook) so nothing reaches a remote unreviewed">
+        <span><b>Push gate</b>
+        <i>no-mistakes' strongest idea — physically nothing ships unreviewed. Heavier: per-repo init, remote rewriting,
+           and agent worktrees need their remotes pointed at the gate.</i></span></label>
+      <label><input type="radio" name="gate" value="card gate first, push gate as a later hardening slice">
+        <span><b>Card gate now, push gate later</b>
+        <i>Ship the department on hive mechanics; add the proxy where repos need the hard guarantee.</i></span></label>
+      <button type="submit">Queue this answer</button>
+    </form>
+
+    <form class="q" data-lavish-question="compliance-scope"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('scope'); if (v) window.lavish.queuePrompt('Preference ledger scope: ' + v, { tag: 'choice', text: 'D3 scope: ' + v, element: event.currentTarget, data: { question: 'compliance-scope', answer: v } });">
+      <div class="qtitle">Decision 3 — preference scope</div>
+      <p class="qwhy">Your taste is mostly global ("no doc comments") but some rules are per-stack ("this repo uses stacked diffs").</p>
+      <label><input type="radio" name="scope" value="global ledger with per-project overlay entries (scope field on each preference)">
+        <span><b>Global + per-project overlay</b><span class="rec">recommended</span>
+        <i>One ledger, each entry carries <code>scope: global | project-id</code>. Compliance agents load global + their card's project.</i></span></label>
+      <label><input type="radio" name="scope" value="strictly global — one taste, everywhere">
+        <span><b>Global only</b><i>Simplest; per-repo conventions stay in each repo's CLAUDE.md/AGENTS.md where they already live.</i></span></label>
+      <button type="submit">Queue this answer</button>
+    </form>
+  </section>
+
+  <!-- ══════════════════ FEATURE 2 ══════════════════ -->
+  <section class="feature">
+    <div class="eyebrow">Feature 2</div>
+    <h2>Canvas — a window where agents render what you're building together</h2>
+    <p class="lede">
+      A pane where an agent's HTML mockups render live inside AgentFleet — and where your annotations flow
+      straight back into the agent as steering. Lavish already solved the hard parts, in MIT-licensed Node
+      source we can read and embed.
+    </p>
+
+    <h3>What lavish-axi is made of — reuse assessment</h3>
+    <div class="scroll"><table>
+      <tr><th>component</th><th>what it does</th><th>verdict</th></tr>
+      <tr><td><b>Session server</b> (express, ~470KB CLI)</td>
+          <td>Serves the artifact at <code>/artifact/:key</code>, rewrites the HTML with <code>parse5</code> to inject the review chrome, watches the file with <code>chokidar</code>, pushes live reload over SSE (<code>/events/:key</code>)</td>
+          <td><span class="tag reuse">reuse</span> embed in Electron main — file-on-disk is the contract; the agent just edits its HTML and the pane reloads</td></tr>
+      <tr><td><b>Review chrome</b> (<code>chrome-client.js</code>, 83KB + CSS)</td>
+          <td>Element/text annotation with CSS selectors, conversation panel, queued prompts, layout-issue detection, native-control interactivity (<code>window.lavish.queuePrompt</code>)</td>
+          <td><span class="tag reuse">reuse</span> this is years of review-surface UX we should not rebuild</td></tr>
+      <tr><td><b>Feedback protocol</b></td>
+          <td>Browser POSTs prompts/attachments → agent long-polls <code>/api/poll</code>; feedback carries selector + tag + data</td>
+          <td><span class="tag reuse">reuse — with one rewire</span> poll output feeds <code>controlSteer</code> (below)</td></tr>
+      <tr><td><b>Whiteboards</b></td>
+          <td>Mermaid diagrams become editable Excalidraw scenes; edits come back as bounded summaries + scene files</td>
+          <td><span class="tag reuse">free if we embed</span> diagram round-tripping for architecture sketching</td></tr>
+      <tr><td><b>Playbooks + design router</b></td>
+          <td>Guidance for plan/diagram/comparison/input artifacts; design-source priority (match the product's design system)</td>
+          <td><span class="tag adopt">adopt as prompt guidance</span> injected when an agent is asked to mock something up</td></tr>
+      <tr><td><b>share / export / ht-ml.app</b></td>
+          <td>Publishing to a third-party host</td>
+          <td><span class="tag skip">skip</span> mockups of internal tools should not default to public hosting</td></tr>
+    </table></div>
+
+    <h3>The wiring that makes it AgentFleet's</h3>
+    <p class="lede" style="font-size:13px">
+      Lavish's annotation feedback is exactly the shape of our steer mechanism. An annotation on a mockup
+      ("this table needs a project column" pinned to <code>#fleet-table</code>) becomes
+      <code>controlSteer(agentId, …)</code> — delivered as <code>additionalContext</code> at the agent's next hook
+      boundary, no keystrokes, no interrupt. The intervene rail and the canvas become two views of one loop:
+      <em>watch, annotate, steer, re-render</em>.
+    </p>
+    <div class="mermaid">
+sequenceDiagram
+  participant A as agent (worktree)
+  participant M as Electron main<br/>(embedded lavish server)
+  participant C as Canvas pane<br/>(sandboxed webview)
+  participant H as you
+  A->>A: writes .lavish/mockup.html
+  M->>C: SSE reload (chokidar sees the write)
+  H->>C: annotate element / queue prompt
+  C->>M: POST /api/:key/prompts
+  M->>A: controlSteer → additionalContext<br/>at next hook boundary
+  A->>A: edits mockup.html
+  M->>C: SSE reload — the loop closes
+    </div>
+
+    <form class="q" data-lavish-question="canvas-reuse"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('reuse'); if (v) window.lavish.queuePrompt('Canvas build approach: ' + v, { tag: 'choice', text: 'D4 approach: ' + v, element: event.currentTarget, data: { question: 'canvas-reuse', answer: v } });">
+      <div class="qtitle">Decision 4 — how much of Lavish do we take?</div>
+      <p class="qwhy">MIT license permits all three.</p>
+      <label><input type="radio" name="reuse" value="embed the lavish-axi npm package: run its server in Electron main, render its artifact URL in a sandboxed webview, rewire its poll into controlSteer">
+        <span><b>Embed the package</b><span class="rec">recommended</span>
+        <i>Full chrome (annotation, conversation, whiteboards, layout diagnostics) for the cost of a dependency and a
+           poll→steer bridge. Upstream improvements arrive with version bumps.</i></span></label>
+      <label><input type="radio" name="reuse" value="extract components: vendor chrome-client.js + the injection/SSE protocol, write our own small server">
+        <span><b>Extract components</b>
+        <i>Full control, our server conventions — but we own 83KB of review-surface UX forever, and whiteboards
+           probably get dropped in the port.</i></span></label>
+      <label><input type="radio" name="reuse" value="minimal: sandboxed iframe + chokidar live reload only, no annotation chrome; steer via the existing intervene rail">
+        <span><b>Minimal renderer</b>
+        <i>A day of work: render + live reload, feedback stays textual in the rail. No element-anchored annotations.</i></span></label>
+      <button type="submit">Queue this answer</button>
+    </form>
+
+    <form class="q" data-lavish-question="canvas-placement"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('place'); if (v) window.lavish.queuePrompt('Canvas placement: ' + v, { tag: 'choice', text: 'D5 placement: ' + v, element: event.currentTarget, data: { question: 'canvas-placement', answer: v } });">
+      <div class="qtitle">Decision 5 — where does the canvas live?</div>
+      <p class="qwhy">Discovery matters: mockups should be impossible to miss.</p>
+      <label><input type="radio" name="place" value="inspector fourth pane (activity/changes/messages/canvas) + a canvas indicator on the fleet row when an agent has artifacts">
+        <span><b>Inspector pane + fleet indicator</b><span class="rec">recommended</span>
+        <i>The canvas belongs to the agent you're supervising — same place you steer it. A small dot on the fleet row
+           says "this agent has something to show you".</i></span></label>
+      <label><input type="radio" name="place" value="project-level canvas view in the workspace rail, aggregating artifacts across the project's agents">
+        <span><b>Project-level canvas</b>
+        <i>One gallery per project. Better for multi-agent design sessions; weaker link to the agent you'd steer.</i></span></label>
+      <label><input type="radio" name="place" value="both: inspector pane first, project gallery as a follow-up slice">
+        <span><b>Inspector first, gallery later</b><i>Ship the loop, then aggregate.</i></span></label>
+      <button type="submit">Queue this answer</button>
+    </form>
+  </section>
+
+  <!-- ══════════════════ SEQUENCING ══════════════════ -->
+  <section class="feature">
+    <div class="eyebrow">Sequencing</div>
+    <h2>Suggested build order</h2>
+    <div class="scroll"><table>
+      <tr><th>slice</th><th>delivers</th><th>size</th></tr>
+      <tr><td><b>C1</b> — review cards + fleet-native compliance role</td>
+          <td>Review card auto-created on work completion, routed by the P6 rules via capability match; findings in the no-mistakes schema on the card; verdict gates <code>done</code>.</td><td>~1 week</td></tr>
+      <tr><td><b>C2</b> — preference ledger + explicit learning</td>
+          <td><code>preferences.jsonl</code> in the hive, injected at spawn; Needs-you overrides write entries; decay counters.</td><td>~1 week</td></tr>
+      <tr><td><b>C3</b> — implicit learning + review evals</td>
+          <td>Post-merge correction mining → proposed preferences; capture/replay/score reviews against reality-gold before prompt changes.</td><td>~1 week</td></tr>
+      <tr><td><b>V1</b> — canvas pane</td>
+          <td>Embedded lavish server + inspector webview + live reload + poll→steer bridge. Independent of C1–C3; can run in parallel.</td><td>~1 week</td></tr>
+      <tr><td><b>V2</b> — mockup playbooks + fleet indicator</td>
+          <td>Agents get render-a-mockup guidance (lavish playbooks as prompt material); fleet rows show canvas activity.</td><td>2–4 days</td></tr>
+    </table></div>
+    <p class="muted">Compliance reviews canvas-bearing PRs like any other — the two features meet without extra work.</p>
+
+    <h3>Anything missing, wrong, or over-engineered?</h3>
+    <form class="q" data-lavish-question="freeform"
+      onsubmit="event.preventDefault(); const v = new FormData(event.currentTarget).get('ff'); if (v && v.trim()) { window.lavish.queuePrompt(v.trim(), { tag: 'freeform', text: v.trim().slice(0, 80), element: event.currentTarget }); event.currentTarget.reset(); }">
+      <textarea class="freeform" name="ff" placeholder="Direction, constraints, vetoes, additions…"></textarea>
+      <button type="submit">Queue feedback</button>
+    </form>
+  </section>
+
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
+  const nodes = [...document.querySelectorAll(".mermaid")];
+  if (document.readyState === "complete") mermaid.run({ nodes });
+  else window.addEventListener("load", () => mermaid.run({ nodes }), { once: true });
+</script>
+</body>
+</html>
