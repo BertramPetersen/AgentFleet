@@ -510,6 +510,18 @@ export interface TelemetrySnapshot {
   spans: Record<string, ToolSpan[]>;
 }
 
+/** A project — mirrors src/main/projects.ts. */
+export interface Project {
+  id: string;
+  name: string;
+  repoPath: string;
+  isolation: 'shared' | 'worktree-per-agent';
+  members: string[];
+  budgetUsd?: number;
+  archived?: boolean;
+  createdAt: string;
+}
+
 /** One captured user prompt from the SQLite command_history table. */
 export interface CommandHistoryEntry {
   id: number;
@@ -1031,6 +1043,15 @@ const api = {
   /** Atomically remove one named card from the latest main-process ledger. */
   hiveDeleteTask: (id: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:deleteTask', id),
+
+  // ─── Projects (AgentFleet — hive/projects.json) ─────────────────────────────
+  projectsList: (): Promise<Project[]> => ipcRenderer.invoke('projects:list'),
+  projectsUpsert: (project: Project): Promise<{ ok: true; project: Project } | { ok: false; error: string }> =>
+    ipcRenderer.invoke('projects:upsert', project),
+  projectsSetArchived: (id: string, archived: boolean): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('projects:setArchived', id, archived),
+  projectsReorderTask: (taskId: string, direction: 'up' | 'down'): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('projects:reorderTask', taskId, direction),
 
   // ─── Scheduled missions (recurring auto-dispatch) ──────────────────────────
   listMissions: (): Promise<ScheduledMission[]> => ipcRenderer.invoke('missions:list'),

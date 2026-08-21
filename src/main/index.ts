@@ -24,6 +24,7 @@ import {
   getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef
 } from './git';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
+import { ProjectStore } from './projects';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -231,6 +232,9 @@ const hive = new HiveManager(
     try { wc.send(channel, payload); return true; } catch { return false; }
   }
 );
+// AgentFleet — projects, in hive/projects.json. Writes ride HiveManager's single
+// committer, so the hive keeps exactly one writer and its git audit trail.
+const projects = new ProjectStore(hive);
 // #7C — operator control state (pause/gate/steer/halt), read by the HookServer
 // when deciding hook returns.
 const control = new ControlRegistry();
@@ -3187,6 +3191,40 @@ ipcMain.handle('hive:setArchived', (_evt, id: unknown, archived: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
   hive.setArchived(id, archived === true);
   return { ok: true };
+});
+
+// ─── IPC: projects (AgentFleet — hive/projects.json) ────────────────────────
+// Fork addition. Kept as its own block against its own module so this file only
+// ever gains handlers, and src/main/projects.ts holds the logic.
+ipcMain.handle('projects:list', async () => {
+  if (!hive.enabled()) return [];
+  // Seeding is lazy and idempotent: the first read after upgrading an existing
+  // hive derives projects from the agents already on the floor, so the board is
+  // never empty just because this feature arrived after the work did.
+  const reg = hive.registry();
+  await projects.seedIfEmpty(Object.entries(reg.agents).map(([id, a]) => ({
+    id,
+    cwd: a.cwd,
+    isGod: a.isGod,
+    isAssistant: a.isAssistant,
+    archived: a.archived
+  })));
+  return projects.list();
+});
+ipcMain.handle('projects:upsert', (_evt, project: unknown) => {
+  if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+  return projects.upsert(project);
+});
+ipcMain.handle('projects:setArchived', (_evt, id: unknown, archived: unknown) => {
+  if (typeof id !== 'string' || !id) return { ok: false, error: 'invalid project id' };
+  if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+  return { ok: projects.setArchived(id, archived === true) };
+});
+ipcMain.handle('projects:reorderTask', (_evt, taskId: unknown, direction: unknown) => {
+  if (typeof taskId !== 'string' || !taskId) return { ok: false, error: 'invalid task id' };
+  if (direction !== 'up' && direction !== 'down') return { ok: false, error: 'invalid direction' };
+  if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+  return { ok: projects.reorder(taskId, direction) };
 });
 
 // ─── IPC: Settings hero payload (remote data, cached) ───────────────────────

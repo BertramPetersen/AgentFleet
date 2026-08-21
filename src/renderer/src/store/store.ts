@@ -147,6 +147,10 @@ interface State {
    *  fleet. Opening an inspector is a navigation, and it should survive those
    *  clicks. */
   inspectorId: string | null;
+  /** Which project the workspace is scoped to; null means every project. */
+  activeProjectId: string | null;
+  /** Which view the main area shows when no inspector is open. */
+  mainView: 'fleet' | 'backlog';
   feeds: Record<string, string[]>;
   addAgentOpen: boolean;
   fullscreenAgentId: string | null;
@@ -274,6 +278,8 @@ interface State {
   /** Open the full-width inspector on an agent (also selects it), or close it. */
   openInspector: (id: string) => void;
   closeInspector: () => void;
+  setActiveProject: (id: string | null) => void;
+  setMainView: (view: 'fleet' | 'backlog') => void;
   setFullscreenFile: (path: string | null, view?: 'edit' | 'preview') => void;
   /** Open/close the IDE. `agentId` names the agent whose workspace it should
    *  show; omit it only when the caller truly has no specific agent (the IDE
@@ -584,6 +590,8 @@ export const useStore = create<State>((set) => ({
   restorableAgents: initialRestorableAgents,
   selectedId: initialSelectedId,
   inspectorId: null,
+  activeProjectId: null,
+  mainView: 'fleet',
   feeds: {},
   addAgentOpen: false,
   ccTabRequest: null,
@@ -836,6 +844,11 @@ export const useStore = create<State>((set) => ({
   setFullscreen: (id) => set({ fullscreenAgentId: id }),
   openInspector: (id) => set({ inspectorId: id, selectedId: id }),
   closeInspector: () => set({ inspectorId: null }),
+  // Switching project closes the inspector: the agent you were watching may not
+  // be in the project you just switched to, and leaving it up would show a
+  // filtered-out agent as if it were part of the new scope.
+  setActiveProject: (id) => set({ activeProjectId: id, inspectorId: null }),
+  setMainView: (view) => set({ mainView: view, inspectorId: null }),
   setFullscreenFile: (path, view) => set({ fullscreenFilePath: path, fullscreenFileView: view ?? 'edit' }),
   // Closing CLEARS the target: the id is scoped to one IDE session, and a stale
   // one left behind would silently win over the selection on the next open from
