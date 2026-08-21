@@ -286,6 +286,10 @@ export interface HarnessConfig {
    *  ("theme" key) at spawn so the TUI's truecolor palette matches. Scoped to
    *  harness agents only; the user's global Claude theme is never touched. */
   terminalTheme?: 'light' | 'dark';
+  /** Deterministic assignment rules (P6). ON unless explicitly false: the
+   *  rules only ever route a contracted, project-filed ready card to an idle
+   *  member, so their failure mode is inaction, not surprise. */
+  autoAssign?: boolean;
   /** Anonymous product analytics (PostHog) — the exact events/properties are
    *  documented in TELEMETRY.md. Default ON (opt-out, like autoUpdate); builds
    *  without an injected key and environments with DO_NOT_TRACK set never send
