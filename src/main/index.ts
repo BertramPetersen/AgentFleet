@@ -27,6 +27,7 @@ import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './
 import { ProjectStore } from './projects';
 import { AssignmentEngine } from './assignmentEngine';
 import { ledgerSpendReader, projectSpend } from './budget';
+import { CanvasServer } from './canvas';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -256,6 +257,15 @@ function projectSpendNow(): Map<string, number> {
     return new Map();
   }
 }
+// Canvas (P8): agents drop HTML artifacts into .canvas/ in their working
+// directory; this loopback server renders them inside the app. Started lazily
+// on first canvas:info call so a hive-less launch never binds a port.
+const canvas = new CanvasServer({
+  agentRoot: (agentId) => {
+    try { return hive.registry().agents[agentId]?.cwd ?? null; } catch { return null; }
+  }
+});
+
 const assigner = new AssignmentEngine({
   hive,
   projects,
@@ -3252,6 +3262,17 @@ ipcMain.handle('projects:list', async () => {
     archived: a.archived
   })));
   return projects.list();
+});
+ipcMain.handle('canvas:info', async () => {
+  try { return await canvas.start(); } catch { return { port: 0, token: '' }; }
+});
+ipcMain.handle('canvas:list', () => {
+  if (!hive.enabled()) return [];
+  try {
+    const reg = hive.registry();
+    const ids = Object.entries(reg.agents).filter(([, a]) => !a.archived).map(([id]) => id);
+    return canvas.list(ids);
+  } catch { return []; }
 });
 ipcMain.handle('projects:spend', () => {
   if (!hive.enabled()) return {};

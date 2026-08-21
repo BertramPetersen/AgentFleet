@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>AgentFleet</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.openai.com https://*.openai.com wss://api.openai.com wss://*.openai.com; media-src 'self' blob: mediastream:;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.openai.com https://*.openai.com wss://api.openai.com wss://*.openai.com; media-src 'self' blob: mediastream:; frame-src http://127.0.0.1:*;" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Inter for everything the user reads, JetBrains Mono for code and
@@ -13,17 +13,17 @@
       #cth-splash {
         position: fixed; inset: 0; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 14px;
-        background: #F6F7F9; color: #15181D;
+        background: #0D1117; color: #E7EBF0;
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       }
       #cth-splash .mk {
         display: grid; place-items: center; width: 44px; height: 44px;
-        background: #15181D; color: #F4D35E; border-radius: 10px;
+        background: #F4D35E; color: #231D05; border-radius: 10px;
         font-family: "Inter", system-ui, sans-serif; font-size: 15px; font-weight: 700;
         letter-spacing: 0.02em;
       }
       #cth-splash .title { font-size: 15px; font-weight: 640; letter-spacing: 0.01em; }
-      #cth-splash .hint { font-size: 14px; color: #6C7480; }
+      #cth-splash .hint { font-size: 14px; color: #6D7A89; }
     </style>
   </head>
   <body>
