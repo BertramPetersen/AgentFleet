@@ -131,7 +131,7 @@ export function App() {
   // Quit warning subscription
   useEffect(() => window.cth.onCloseRequested((info) => setQuitWarn(info)), []);
 
-  // Shareable hires: a validated manifest arriving via the munderdifflin://
+  // Shareable hires: a validated manifest arriving via the agentfleet://
   // deep link (or file import) pre-fills the Add-Agent modal. Never spawns by itself.
   const setPendingHire = useStore(s => s.setPendingHire);
   useEffect(() => {

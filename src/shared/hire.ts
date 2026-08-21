@@ -4,7 +4,7 @@
  * A hire manifest is a small JSON document that describes a role-configured
  * agent (name, provider, model, flags, goal, budget) so it can be shared as a
  * file or hosted in a community gallery and imported with one click via the
- * `munderdifflin://hire?src=<https-url>` deep link or an in-app file picker.
+ * `agentfleet://hire?src=<https-url>` deep link or an in-app file picker.
  *
  * SECURITY MODEL — a manifest is untrusted input:
  *   - It can NEVER auto-spawn an agent. Importing only pre-fills the Add-Agent
@@ -316,13 +316,13 @@ export function validateHireManifest(raw: unknown): HireValidation {
   };
 }
 
-/** Parse a `munderdifflin://hire?src=<https-url>` deep link. Returns the https
+/** Parse a `agentfleet://hire?src=<https-url>` deep link. Returns the https
  *  manifest URL, or null if the link is not a well-formed hire link. */
 export function parseHireDeepLink(link: string): string | null {
   let u: URL;
   try { u = new URL(link); } catch { return null; }
-  if (u.protocol !== 'munderdifflin:') return null;
-  // Both munderdifflin://hire?src= (host) and munderdifflin:hire?src= (path).
+  if (u.protocol !== 'agentfleet:') return null;
+  // Both agentfleet://hire?src= (host) and agentfleet:hire?src= (path).
   const action = (u.host || u.pathname.replace(/^\/+/, '')).toLowerCase();
   if (action !== 'hire') return null;
   const src = u.searchParams.get('src');
