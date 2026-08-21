@@ -57,6 +57,12 @@ export interface RuleProject {
   repoPath?: string;
   members?: string[];
   archived?: boolean;
+  /** Spend ceiling in USD. Absent or 0 = uncapped. */
+  budgetUsd?: number;
+  /** Observed spend, computed by the CALLER (live: the durable cost ledger;
+   *  replay: the hive's current ledger as a best-effort approximation). Like
+   *  idleness, spend is an observation the rules only consume. */
+  spentUsd?: number;
 }
 
 export interface FleetState {
@@ -72,7 +78,8 @@ export type RuleId =
   | 'not-a-member'        // rule 4 — the named assignee is outside the project
   | 'assignee-unavailable'// rule 1 — assignee is archived/gone
   | 'unfiled'             // no projectId — decomposition/filing is dispatcher work
-  | 'no-idle-member';     // ready and contracted, but nobody is free
+  | 'no-idle-member'      // ready and contracted, but nobody is free
+  | 'over-budget';        // the project spent past its cap — nothing dispatches
 
 export interface Decision {
   taskId: string;
@@ -145,6 +152,18 @@ function eligible(a: RuleAgent): boolean {
   return !a.archived && !a.isGod && !a.isAssistant;
 }
 
+/** A cap is a cap: while a project is over budget NOTHING dispatches into it —
+ *  not even an explicit assignee. The human raises the budget (or archives
+ *  work); silently exceeding a number the human wrote down is worse than a
+ *  held card that says why it is held. */
+function overBudget(p: RuleProject): boolean {
+  return typeof p.budgetUsd === 'number' && p.budgetUsd > 0 && (p.spentUsd ?? 0) >= p.budgetUsd;
+}
+
+function overBudgetReason(p: RuleProject): string {
+  return `project ${p.id} is over budget ($${(p.spentUsd ?? 0).toFixed(2)} of $${(p.budgetUsd ?? 0).toFixed(2)}) — raise the budget to resume dispatch`;
+}
+
 /**
  * One pass over the ledger. Deterministic: same state in, same decisions out —
  * agents are considered in id order, cards in backlog order, and each agent
@@ -179,6 +198,10 @@ export function decideAssignments(state: FleetState): Decision[] {
         decisions.push({ taskId: t.id, action: 'hold', rule: 'not-a-member', reason: `"${a.id}" is not a member of ${p.id}` });
         continue;
       }
+      if (p && overBudget(p)) {
+        decisions.push({ taskId: t.id, action: 'hold', rule: 'over-budget', reason: overBudgetReason(p) });
+        continue;
+      }
       // Rule 5 applies to rule-driven dispatch too: a card with no contract is
       // not ready to leave, whoever's name is on it.
       if (!hasContract(t)) {
@@ -195,11 +218,15 @@ export function decideAssignments(state: FleetState): Decision[] {
       decisions.push({ taskId: t.id, action: 'hold', rule: 'unfiled', reason: 'no project — filing/decomposition is dispatcher work' });
       continue;
     }
+    const p = projects.get(t.projectId) as RuleProject;
+    if (overBudget(p)) {
+      decisions.push({ taskId: t.id, action: 'hold', rule: 'over-budget', reason: overBudgetReason(p) });
+      continue;
+    }
     if (!hasContract(t)) {
       decisions.push({ taskId: t.id, action: 'hold', rule: 'no-contract', reason: 'no dispatch contract (objective + output are the minimum)' });
       continue;
     }
-    const p = projects.get(t.projectId) as RuleProject;
     const members = agents.filter((a) => eligible(a) && isMember(a, p));
     if (members.length === 0) {
       decisions.push({ taskId: t.id, action: 'hold', rule: 'no-idle-member', reason: `${p.id} has no eligible members` });

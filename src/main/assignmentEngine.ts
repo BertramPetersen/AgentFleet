@@ -42,6 +42,9 @@ export interface AssignmentEngineDeps {
   /** Which agents are idle RIGHT NOW — computed by the caller from telemetry
    *  (recent usage) and inbox backlog. Idleness is an observation, not a rule. */
   idleAgents: () => Set<string>;
+  /** Per-project USD spend from the durable cost ledger (see budget.ts) —
+   *  feeds the over-budget rule. Optional: absent means uncapped behavior. */
+  projectSpend?: () => Map<string, number>;
 }
 
 type LedgerTask = RuleTask & { dispatch?: { by?: string; to?: string } };
@@ -85,7 +88,8 @@ export class AssignmentEngine {
       tasks = parseLedger(hive.tasks());
       const idle = idleAgents();
       agents = Object.values(hive.registry().agents ?? {}).map((a) => ({ ...a, idle: idle.has(a.id) }));
-      projectList = projects.list();
+      const spend = this.deps.projectSpend?.() ?? new Map<string, number>();
+      projectList = projects.list().map((p) => ({ ...p, spentUsd: spend.get(p.id) ?? 0 }));
     } catch {
       return []; // hive mid-write or unreadable — next tick will see a consistent state
     }

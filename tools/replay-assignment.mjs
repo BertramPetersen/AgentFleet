@@ -58,17 +58,27 @@ const git = (...a) => execFileSync('git', ['-C', hive, ...a], { encoding: 'utf8'
 // ── load the rules (same TS the live tick uses) ────────────────────────────
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const esbuild = await import(pathToFileURL(join(repoRoot, 'node_modules', 'esbuild', 'lib', 'main.js')).href);
-const bundled = esbuild.buildSync({
-  entryPoints: [join(repoRoot, 'src', 'main', 'assignment.ts')],
-  bundle: true,
-  format: 'esm',
-  platform: 'node',
-  write: false
-});
 const tmp = mkdtempSync(join(tmpdir(), 'replay-rules-'));
-const rulesPath = join(tmp, 'assignment.mjs');
-writeFileSync(rulesPath, bundled.outputFiles[0].text);
-const { decideAssignments } = await import(pathToFileURL(rulesPath).href);
+const loadTs = async (name) => {
+  const bundled = esbuild.buildSync({
+    entryPoints: [join(repoRoot, 'src', 'main', `${name}.ts`)],
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    write: false
+  });
+  const file = join(tmp, `${name}.mjs`);
+  writeFileSync(file, bundled.outputFiles[0].text);
+  return import(pathToFileURL(file).href);
+};
+const { decideAssignments } = await loadTs('assignment');
+const { ledgerSpendByAgent, projectSpend } = await loadTs('budget');
+
+// Budget context. The ledger is not committed to the hive repo, so historical
+// spend cannot be reconstructed — replay applies TODAY's ledger to every
+// decision point, which makes over-budget holds an approximation there (and
+// exact in fixtures that write the ledger alongside the history).
+const spendByAgent = ledgerSpendByAgent(join(hive, 'cost-ledger.jsonl'));
 
 // ── walk the hive history ──────────────────────────────────────────────────
 const TRACKED = ['tasks.json', 'registry.json', 'projects.json'];
@@ -114,10 +124,12 @@ const trace = [];
 for (let i = 0; i < points.length; i++) {
   const here = points[i];
   const next = points[i + 1] ?? null;
+  const agents = here.state.agents.map((a) => ({ ...a, idle: strictIdle ? false : !a.archived }));
+  const spend = projectSpend(here.state.projects, agents, spendByAgent);
   const state = {
     tasks: here.state.tasks,
-    projects: here.state.projects,
-    agents: here.state.agents.map((a) => ({ ...a, idle: strictIdle ? false : !a.archived }))
+    projects: here.state.projects.map((p) => ({ ...p, spentUsd: spend.get(p.id) ?? 0 })),
+    agents
   };
   const decisions = decideAssignments(state);
 

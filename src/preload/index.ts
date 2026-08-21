@@ -895,7 +895,7 @@ const api = {
   },
 
   // ─── Shareable hires (deep link / file import) ────────────────────────────
-  /** Fired when a validated hire manifest arrives via the munderdifflin://
+  /** Fired when a validated hire manifest arrives via the agentfleet://
    *  deep link. The renderer opens the Add-Agent modal pre-filled — import
    *  never spawns anything by itself. */
   onHireImport: (cb: (manifest: HireManifest) => void): (() => void) => {
@@ -1046,6 +1046,7 @@ const api = {
 
   // ─── Projects (AgentFleet — hive/projects.json) ─────────────────────────────
   projectsList: (): Promise<Project[]> => ipcRenderer.invoke('projects:list'),
+  projectsSpend: (): Promise<Record<string, number>> => ipcRenderer.invoke('projects:spend'),
   projectsUpsert: (project: Project): Promise<{ ok: true; project: Project } | { ok: false; error: string }> =>
     ipcRenderer.invoke('projects:upsert', project),
   projectsSetArchived: (id: string, archived: boolean): Promise<{ ok: boolean; error?: string }> =>
