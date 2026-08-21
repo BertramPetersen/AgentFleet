@@ -1,45 +1,82 @@
-/* Design tokens — mirrors tokens.ts. Update both together. */
+/* Design tokens — the AgentFleet design system, as decided in the Lavish
+   session (.lavish/fork-plan.html, "mock product UI: the proposed design
+   system"). One dark palette: #0d1117 ground, graded s1/s2/s3 surfaces, a
+   near-white text ramp, and the #f4d35e brand accent kept from the fork.
+
+   Names are kept from the fork (cream/paper/ink) because ~2000 call sites
+   reference them; only the values moved. The mapping onto the mock's ramp:
+     cream-50  → below-ground   cream-100 → --bg    cream-200 → --s1
+     cream-300 → --s3           paper-100 → --s2    paper-200 → --s3
+     ink-900   → --tx           ink-700   → --dim   ink-500   → --dim2
+     ink-300   → --bd2          ink-100   → --bd */
 :root {
-  /* Base — AgentFleet: neutral greys. The parchment ramp (#FFF8E7 …) was the
-     game's warmth and it made every dense table read as a scrapbook page. Names
-     are kept because 126 call sites reference them; only the values moved. */
-  --cth-cream-50:  #F6F7F9;   /* app ground */
-  --cth-cream-100: #FFFFFF;   /* default panel fill */
-  --cth-cream-200: #F0F2F5;   /* inset / alternating row */
-  --cth-cream-300: #E3E6EA;   /* disabled fill */
-  --cth-paper-100: #FFFFFF;   /* cards, inputs, terminals */
-  --cth-paper-200: #F8F9FB;
+  --cth-cream-50:  #0A0D12;   /* ground behind panels — a hair below bg */
+  --cth-cream-100: #0D1117;   /* bg — default panel fill */
+  --cth-cream-200: #141A21;   /* s1 — rails, bars, group rows, alt fills */
+  --cth-cream-300: #212A35;   /* s3 — disabled fill */
+  --cth-paper-100: #1A222B;   /* s2 — cards, inputs, fields */
+  --cth-paper-200: #212A35;   /* s3 — chips, selected fills */
 
-  /* Ink — neutral text ramp. ink-300 is structural (borders, ~93 inset rules),
-     so it stays at/above 3:1 on white exactly as the dark theme requires. */
-  --cth-ink-900: #15181D;   /* 16.8:1 on white — primary text */
-  --cth-ink-700: #414852;   /*  9.2:1        — secondary text */
-  --cth-ink-500: #6C7480;   /*  4.9:1        — tertiary / hints */
-  --cth-ink-300: #949BA5;   /*  3.1:1        — BORDERS. keep >= 3.0 */
-  --cth-ink-100: #E4E7EB;   /*  1.3:1        — dividers, meant to recede */
+  /* Ink — near-white text ramp over the dark ground. ink-300/ink-100 are
+     structural (the app's borders and dividers), matching the mock's bd2/bd. */
+  --cth-ink-900: #E7EBF0;   /* primary text */
+  --cth-ink-700: #95A2B3;   /* secondary text */
+  --cth-ink-500: #6D7A89;   /* tertiary / hints */
+  --cth-ink-300: #3A4654;   /* strong borders (buttons, inputs, chips) */
+  --cth-ink-100: #2A3441;   /* default borders and dividers */
 
-  /* Accents — v0.3.4 recalibration: same hues, professional saturation.
-     The originals (#FFD93D, #FF6B6B, …) were full-saturation arcade tones that
-     read as noise at UI density; these sit in the calmer band that products
-     like Linear/Radix use — recognizable color, no glare. */
-  --cth-coral: #D96A62;       --cth-coral-light: #F3D3CD;
-  --cth-mint:  #5CA97A;       --cth-mint-light:  #D2E7DA;
-  --cth-sky:   #4F9FAF;       --cth-sky-light:   #CFE5E9;
-  --cth-lemon: #DCAB3C;       --cth-lemon-light: #F3E4BC;
-  --cth-lilac: #9482D3;       --cth-lilac-light: #E0DAF2;
-  --cth-peach: #D99168;       --cth-peach-light: #F3DACA;
+  /* Accents — the mock's exact hues. lemon IS the brand accent (--acc). */
+  --cth-coral: #FF8A8A;       --cth-coral-light: #260C0C;
+  --cth-mint:  #5FC98A;       --cth-mint-light:  #082115;
+  --cth-sky:   #4ECDC4;       --cth-sky-light:   #07211F;
+  --cth-lemon: #F4D35E;       --cth-lemon-light: #241F08;
+  --cth-lilac: #9B7EDE;       --cth-lilac-light: #1D1530;
+  --cth-peach: #FFB84D;       --cth-peach-light: #231A08;
+  --cth-link:  #6C8EF5;
 
-  /* Status — same recalibration; hue meanings unchanged */
-  --cth-status-idle:     #A199AB;
-  --cth-status-thinking: #4F9FAF;
-  --cth-status-working:  #DCAB3C;
-  --cth-status-waiting:  #6D87D6;
-  --cth-status-blocked:  #D96A62;
-  --cth-status-success:  #5CA97A;
-  --cth-status-ghost:    #D9D3DE;
-  --cth-status-compacting: #8F7CC7; /* #5C — mid-/compact, "boxing up context" */
-  --cth-status-looping:    #D6903F; /* #5C — circuit-breaker armed (runaway) */
-  --cth-status-typing:     #C89838; /* unsent text on the prompt — queue is held */
+  /* Status — pill text/dot colors, straight from the mock's .pill classes … */
+  --cth-status-idle:     #95A2B3;
+  --cth-status-thinking: #4ECDC4;
+  --cth-status-working:  #FFD93D;
+  --cth-status-waiting:  #8FA9F7;
+  --cth-status-blocked:  #FF8A8A;
+  --cth-status-success:  #5FC98A;
+  --cth-status-ghost:    #5D6A78;
+  --cth-status-compacting: #9B7EDE;
+  --cth-status-looping:    #FFB84D;
+  --cth-status-typing:     #CDB45C;
+
+  /* … and their tinted pill fills + borders (mock: dark tint of the hue). */
+  --cth-status-idle-bg:     #141A21;  --cth-status-idle-bd:     #333D49;
+  --cth-status-thinking-bg: #07211F;  --cth-status-thinking-bd: #1D4A47;
+  --cth-status-working-bg:  #241F08;  --cth-status-working-bd:  #5C4F1A;
+  --cth-status-waiting-bg:  #0C1129;  --cth-status-waiting-bd:  #2B3768;
+  --cth-status-blocked-bg:  #260C0C;  --cth-status-blocked-bd:  #5C2626;
+  --cth-status-success-bg:  #082115;  --cth-status-success-bd:  #1F4A33;
+  --cth-status-ghost-bg:    #10141A;  --cth-status-ghost-bd:    #2A3441;
+  --cth-status-compacting-bg: #1D1530; --cth-status-compacting-bd: #3A2F5C;
+  --cth-status-looping-bg:  #231A08;  --cth-status-looping-bd:  #5C421A;
+  --cth-status-typing-bg:   #211D0D;  --cth-status-typing-bd:   #4D4419;
+
+  /* Aliases for tokens referenced with light-era hex fallbacks scattered in
+     older components — defined here so those fallbacks can never fire. */
+  --cth-danger:        var(--cth-coral);
+  --cth-warn:          var(--cth-peach);
+  --cth-green:         var(--cth-mint);
+  --cth-mint-700:      var(--cth-mint);
+  --cth-sky-700:       var(--cth-sky);
+  --cth-ink-400:       var(--cth-ink-500);
+  --cth-amber-light:   var(--cth-peach-light);
+  --cth-paprika-light: var(--cth-coral-light);
+  --cth-paprika-700:   #5C2626;
+  --cth-font-body:     var(--cth-font-ui);
+
+  /* Radii — the mock's shape language: 6px controls, 8px cards, 10px shells. */
+  --cth-radius-xs:   4px;
+  --cth-radius-sm:   6px;
+  --cth-radius-md:   8px;
+  --cth-radius-lg:   10px;
+  --cth-radius-pill: 999px;
 
   /* Spacing */
   --cth-space-0: 0px;
@@ -52,126 +89,42 @@
   --cth-space-7: 48px;
   --cth-space-8: 64px;
 
-  /* Type — AgentFleet drops Press Start 2P. It was the last load-bearing piece
-     of the game aesthetic, and at 8px it was only legible BECAUSE it is a pixel
-     font. Display is now Inter, distinguished from body text by weight and
-     tracking rather than by face (see the [style*="cth-font-display"] rule in
-     global.css, which supplies that weight without touching 126 call sites). */
-  --cth-font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --cth-font-ui:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  /* Type — the mock's system stack; Inter/JetBrains Mono are used when the OS
+     has them and degrade to the same stack the mock rendered in. */
+  --cth-font-display: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --cth-font-ui:      "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --cth-font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Type scale — v0.3.4: one step tighter (Inter reads larger than Pixelify
-     at equal px, and the controls were oversized) */
-  --cth-text-display-lg: 15px;
+  /* Type scale — the mock's density: 12.5px body, 11.5px controls/subtext,
+     14px pane titles, 10px uppercase section heads, 11px mono keys. */
+  --cth-text-display-lg: 14px;
   --cth-text-display-md: 13px;
-  --cth-text-display-sm: 11px;  /* was 8px — legible only in a pixel font */
-  --cth-text-body-lg:    16px;
-  --cth-text-body-md:    14px;
-  --cth-text-body-sm:    13px;
-  --cth-text-mono-md:    14px;
-  --cth-text-mono-sm:    13px;
+  --cth-text-display-sm: 10px;
+  --cth-text-body-lg:    13px;
+  --cth-text-body-md:    12.5px;
+  --cth-text-body-sm:    11.5px;
+  --cth-text-mono-md:    12px;
+  --cth-text-mono-sm:    11px;
 
-  /* Line heights — integer multiples */
-  --cth-lh-display-lg: 22px;
+  /* Line heights */
+  --cth-lh-display-lg: 20px;
   --cth-lh-display-md: 18px;
-  --cth-lh-display-sm: 15px;
-  --cth-lh-body-lg:    24px;
-  --cth-lh-body-md:    20px;
-  --cth-lh-body-sm:    18px;
-  --cth-lh-mono:       20px;
+  --cth-lh-display-sm: 14px;
+  --cth-lh-body-lg:    20px;
+  --cth-lh-body-md:    18px;
+  --cth-lh-body-sm:    16px;
+  --cth-lh-mono:       17px;
 
-  /* Elevation. The blur-free 3px offset was the SNES panel look; a tool wants
-     depth you don't notice. Token name kept for its ~30 call sites. */
-  --cth-shadow-hard: 0 1px 2px rgba(21, 24, 29, 0.06), 0 4px 12px -2px rgba(21, 24, 29, 0.10);
+  /* Elevation — on dark, depth comes from shadow spread, not offset stamps. */
+  --cth-shadow-hard: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px -8px rgba(0, 0, 0, 0.55);
 
-  /* Panel borders — v0.3.4: single hairlines. The old three-layer package
-     boxed every surface in thick chrome; structure now comes from surface
-     contrast, not outlines. Dialogs keep one slightly stronger line. */
-  --cth-panel-border:          inset 0 0 0 1px var(--cth-ink-300);
-  /* Text that sits ON an accent fill (a selected tab, a filled chip). The
-     accents are LIGHT surfaces in BOTH themes, so this is dark in both — using
-     ink-900 here inverts with the theme and paints near-white on a pale accent,
-     which is the one place the theme switch actively hurts legibility. */
-  --cth-on-accent: #1A1320;
-
+  /* Panel borders — 1px rings in the mock's bd, one step stronger for dialogs. */
+  --cth-panel-border:          inset 0 0 0 1px var(--cth-ink-100);
   --cth-panel-border-inset:    inset 0 0 0 1px var(--cth-ink-100);
-  --cth-panel-border-terminal: inset 0 0 0 1px var(--cth-ink-300);
-  --cth-panel-border-dialog:   inset 0 0 0 1px var(--cth-ink-500);
-}
+  --cth-panel-border-terminal: inset 0 0 0 1px var(--cth-ink-100);
+  --cth-panel-border-dialog:   inset 0 0 0 1px var(--cth-ink-300);
 
-/* ── Dark theme ──────────────────────────────────────────────────────────────
-   One token swap darkens the WHOLE app. Shades of black with a near-white text
-   ramp, tuned for READABILITY first and measured rather than eyeballed. Stamped
-   by design/theme.ts as data-cth-theme on <html>; the terminal palette and
-   per-agent Claude session themes follow the same switch.
-
-   THE BUG THIS FIXES. Text was never the problem — ink-900 measured 11-14:1 and
-   ink-700 8-9.6:1 against every surface. `ink-300` was, at 1.73-2.09:1. That
-   token is not decoration: it is this app's entire structural language, used
-   187 times and 93 of those as `inset 0 0 0 1px` — the border on every button,
-   input, panel, card and chip. Below ~3:1 a 1px line is not perceivable, so in
-   dark mode the edges defining every control simply were not there, and the UI
-   read as flat washes of grey. ink-300 is now 3.12-3.59:1 and ink-100 stays
-   deliberately quieter (1.47-1.69:1) for dividers that should recede.
-
-   NOT BLACK, AND NOT WHITE. A first pass took the ground to #0E0E11 and text to
-   #EDECEA, which measured beautifully and read as harsh: near-black behind
-   near-white is maximum contrast, and maximum contrast is not the same as
-   comfortable. The ground now sits at luminance 0.009-0.020 (visibly lifted off
-   black, still unambiguously a dark theme) and text at 0.71 rather than 0.84 —
-   a warm off-white. Everything still clears its floor with room to spare.
-
-   Every value below is verified against WCAG contrast for the five surfaces it
-   can appear on: body text >= 4.5, structural borders >= 3.0. Accents are held
-   to a narrow luminance band (0.36-0.44) so no single hue fluoresces against
-   the black and colour never becomes the thing carrying the layout. */
-:root[data-cth-theme='dark'] {
-  /* Base surfaces — a graded elevation ramp, darkest where light mode was
-     lightest. Neutral with a whisper of the brand's violet warmth. */
-  --cth-cream-50:  #14161A;   /* app ground — dark, deliberately NOT black */
-  --cth-cream-100: #1A1D22;
-  --cth-cream-200: #23272E;
-  --cth-cream-300: #2E333B;
-  --cth-paper-100: #171A1F;   /* cards, inputs, terminals */
-  --cth-paper-200: #1F232A;
-
-  /* Ink → off-white text ramp (never #FFF — glare) */
-  --cth-ink-900: #DCDFE4;   /* primary text — neutral off-white, never #FFF */
-  --cth-ink-700: #ACB2BB;   /* secondary text */
-  --cth-ink-500: #8B929C;   /* tertiary / hints */
-  --cth-ink-300: #6E757F;   /* BORDERS. must stay >= 3.0 on the ground */
-  --cth-ink-100: #333941;   /* dividers, meant to recede */
-
-  /* Accents — one step lighter/softer than the light set so they read on dark
-     without fluorescing */
-  --cth-coral: #E08C82;       --cth-mint:  #74C096;
-  --cth-sky:   #6FB3C4;       --cth-lemon: #CFAA57;
-  --cth-lilac: #A896E3;       --cth-peach: #DFA57F;
-
-  /* Accent "-light" fills double as chip/selection backgrounds — deep muted
-     versions so light text (ink-900) stays readable on top. */
-  --cth-coral-light: #3B2724;
-  --cth-mint-light:  #1E3227;
-  --cth-sky-light:   #1F3238;
-  --cth-lemon-light: #332C1D;
-  --cth-lilac-light: #2B2740;
-  --cth-peach-light: #352822;
-
-  /* Status — dark-tuned counterparts (same hue language) */
-  --cth-status-idle:     #6F6C77;
-  --cth-status-thinking: #64ACBB;
-  --cth-status-working:  #D8B052;
-  --cth-status-waiting:  #8095DC;
-  --cth-status-blocked:  #DF8078;
-  --cth-status-success:  #6FB88B;
-  /* The quietest status, but still a MARK the user must be able to find — at
-     the old #3D3C44 it measured 1.54:1 on the new ground and simply vanished. */
-  --cth-status-ghost:    #6C6A76;
-  --cth-status-compacting: #9D8BD2;
-  --cth-status-looping:    #D69A55;
-  --cth-status-typing:     #CBA24A;
-
-  /* Elevation on dark: lift the surface, don't stamp a shadow next to it. */
-  --cth-shadow-hard: 0 1px 2px rgba(0, 0, 0, 0.40), 0 6px 16px -4px rgba(0, 0, 0, 0.55);
+  /* Text on the accent fill (primary buttons, selected accent chips) — the
+     mock's #231d05, near-black warm brown on #f4d35e. */
+  --cth-on-accent: #231D05;
 }

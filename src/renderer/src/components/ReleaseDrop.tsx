@@ -53,14 +53,14 @@ export function ReleaseDrop({
   // The chrome deliberately drops the app's pixel idiom. Inside this dialog the
   // drop is the subject and the surrounding UI should read as a quiet frame
   // around it — sharp 2px borders and hard drop-shadows fight a modern page.
-  const INK = '#14131A';
-  const INK_SOFT = '#6C6875';
-  const LINE = 'rgba(20,19,26,0.10)';
+  const INK = '#E7EBF0';
+  const INK_SOFT = '#95A2B3';
+  const LINE = 'rgba(231,235,240,0.12)';
   const button = (primary: boolean): React.CSSProperties => ({
     padding: '9px 18px',
     borderRadius: 999,
     background: primary ? INK : 'transparent',
-    color: primary ? '#FBFAF8' : INK_SOFT,
+    color: primary ? '#0D1117' : INK_SOFT,
     border: primary ? '1px solid ' + INK : `1px solid ${LINE}`,
     fontFamily: 'inherit', fontSize: 13.5, fontWeight: primary ? 600 : 500,
     cursor: busy ? 'not-allowed' : 'pointer',
@@ -94,7 +94,7 @@ export function ReleaseDrop({
           width: 'min(80vh, 94vw)',
           minHeight: 380,
           display: 'flex', flexDirection: 'column',
-          background: '#FBFAF8',
+          background: '#0D1117',
           // Soft, modern elevation — not the app's pixel drop-shadow. The drop is
           // an authored artifact presented BY the app, not a piece of its chrome.
           borderRadius: 20,
@@ -111,7 +111,7 @@ export function ReleaseDrop({
         <div style={{
           flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10,
           padding: '14px 18px 12px', borderBottom: `1px solid ${LINE}`,
-          background: '#FBFAF8'
+          background: '#0D1117'
         }}>
           <span style={{
             fontSize: 11.5, fontWeight: 600, letterSpacing: '.1em',
@@ -139,7 +139,7 @@ export function ReleaseDrop({
           referrerPolicy="no-referrer"
           style={{
             flex: 1, minHeight: 0, width: '100%', border: 'none',
-            background: '#FBFAF8'
+            background: '#0D1117'
           }}
         />
 
@@ -147,7 +147,7 @@ export function ReleaseDrop({
         <div style={{
           flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           padding: '14px 18px', borderTop: `1px solid ${LINE}`,
-          background: '#FBFAF8'
+          background: '#0D1117'
         }}>
           {showStar && (
             <button onClick={onStar} style={{

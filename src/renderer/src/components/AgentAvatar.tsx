@@ -41,12 +41,14 @@ export function AgentAvatar({
         display: 'grid',
         placeItems: 'center',
         background: ACCENT_VAR[accent] ?? ACCENT_VAR.sky,
-        color: 'var(--cth-ink-900)',
-        boxShadow: 'inset 0 0 0 1px var(--cth-ink-900)',
+        // The mock's avatars: accent fill, near-black initials, ~28% radius.
+        color: '#0D1117',
+        borderRadius: Math.max(4, Math.round(size * 0.28)),
         fontFamily: 'var(--cth-font-ui)',
-        fontSize: Math.max(10, Math.round(size * 0.42)),
+        fontSize: Math.max(9, Math.round(size * 0.4)),
+        fontWeight: 700,
         lineHeight: 1,
-        letterSpacing: 0,
+        letterSpacing: '-0.02em',
         userSelect: 'none'
       }}
     >

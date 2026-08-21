@@ -16,7 +16,6 @@ import { usePtyParser } from '@/hooks/usePtyParser';
 import { useRestoreTeam } from '@/hooks/useRestoreTeam';
 import { useTerminalFontSize } from './terminalFontSize';
 import { useHasTerminalDraft, disposeTerminal } from './terminalPool';
-import { useAppTheme, toggleAppTheme } from '@/design/theme';
 import type { HarnessConfig } from '@/store/config';
 
 /** Roster rail width. A fixed 232px is right on a 14" laptop but reads as a
@@ -156,7 +155,6 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
   // The floor strip (and with it the restore button) is hidden behind the
   // overlay, so the roster carries restore too.
   const { restoring, autoRestoring, restoreTeam } = useRestoreTeam(config);
-  const appThemeNow = useAppTheme();
 
   const agent = agents.find(a => a.id === fullscreenAgentId);
   const parser = usePtyParser(agent?.id ?? '__none__');
@@ -288,30 +286,12 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               // Pressed-in when collapsed, so the rail's absence reads as a state
               // this button is holding rather than something that broke.
               background: rosterCollapsed ? 'var(--cth-lemon)' : 'var(--cth-paper-100)',
-              boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
-              color: rosterCollapsed ? 'var(--cth-ink-900)' : 'var(--cth-ink-900)'
+              boxShadow: rosterCollapsed ? 'none' : 'inset 0 0 0 1px var(--cth-ink-300)',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
+              color: rosterCollapsed ? 'var(--cth-on-accent)' : 'var(--cth-ink-900)'
             }}
           >
             <Icon name="sidebar" size={1} style={{ width: 16, height: 16 }} />
-          </button>
-          <button
-            onClick={() => {
-              const next = toggleAppTheme();
-              void window.cth.updateConfig({ terminalTheme: next });
-            }}
-            title={appThemeNow === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'}
-            aria-label="Toggle dark mode"
-            style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 28, height: 28, padding: 0,
-              background: 'var(--cth-paper-100)',
-              boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
-              color: 'var(--cth-ink-900)', fontSize: 13, lineHeight: 1
-            }}
-          >
-            {appThemeNow === 'dark' ? '☀' : '☾'}
           </button>
           {/* Settings — the main title bar has it, so fullscreen must too:
               anything reachable in one mode and not the other is a trap. Uses
@@ -327,7 +307,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               width: 28, height: 28, padding: 0,
               background: 'var(--cth-paper-100)',
               boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
               color: 'var(--cth-ink-900)'
             }}
           >
@@ -349,7 +329,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               width: 28, height: 28, padding: 0,
               background: 'var(--cth-paper-100)',
               boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
               color: 'var(--cth-ink-900)'
             }}
           >

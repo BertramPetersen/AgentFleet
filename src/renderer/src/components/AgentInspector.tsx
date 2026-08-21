@@ -114,8 +114,9 @@ export function AgentInspector({ agent }: { agent: Agent }) {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '4px 10px', cursor: 'pointer', border: 'none',
+                  borderRadius: '6px 6px 0 0',
                   fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-                  background: pane === p.key ? 'var(--cth-cream-100)' : 'transparent',
+                  background: pane === p.key ? 'var(--cth-paper-100)' : 'transparent',
                   boxShadow: pane === p.key
                     ? `inset 0 -2px 0 var(--cth-${agent.accent})`
                     : 'none',
@@ -138,7 +139,7 @@ export function AgentInspector({ agent }: { agent: Agent }) {
           {/* Terminal — the agent in its own words. */}
           <div style={{
             flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
-            borderTop: '1px solid var(--cth-ink-300)'
+            borderTop: '1px solid var(--cth-ink-100)'
           }}>
             {live && agent.ptyId && !ptyIsElsewhere ? (
               <>
@@ -180,13 +181,13 @@ export function AgentInspector({ agent }: { agent: Agent }) {
         <div style={{
           width: 312, flex: '0 0 312px', minHeight: 0, overflowY: 'auto',
           padding: '12px 13px', display: 'flex', flexDirection: 'column', gap: 14,
-          background: 'var(--cth-paper-200)',
-          borderLeft: '1px solid var(--cth-ink-300)'
+          background: 'var(--cth-cream-200)',
+          borderLeft: '1px solid var(--cth-ink-100)'
         }}>
           <div>
             <div style={railLabel}>Context</div>
-            <div style={{ height: 5, background: 'var(--cth-cream-300)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.round(pct * 100)}%`, background: ctxColor }} />
+            <div style={{ height: 4, background: 'var(--cth-cream-300)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${Math.round(pct * 100)}%`, background: ctxColor, borderRadius: 2 }} />
             </div>
             <div style={mono}>
               {limit > 0 ? `${compact(ctx)} / ${compact(limit)} · ${Math.round(pct * 100)}%` : 'not reported yet'}
@@ -216,9 +217,9 @@ const railLabel: React.CSSProperties = {
   fontFamily: 'var(--cth-font-display)',
   fontSize: 'var(--cth-text-display-sm)',
   textTransform: 'uppercase',
-  letterSpacing: '0.06em',
+  letterSpacing: '0.12em',
   color: 'var(--cth-ink-500)',
-  marginBottom: 5
+  marginBottom: 6
 };
 
 const mono: React.CSSProperties = {
@@ -232,8 +233,9 @@ function Chip({ children }: { children: React.ReactNode }) {
   return (
     <span style={{
       padding: '1px 6px',
+      borderRadius: 'var(--cth-radius-xs)',
       fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
-      color: 'var(--cth-ink-700)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+      color: 'var(--cth-ink-700)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
       whiteSpace: 'nowrap'
     }}>{children}</span>
   );

@@ -150,10 +150,11 @@ export function AgentCard({
             position: 'absolute', right: -4, bottom: -5, zIndex: 2,
             width: 20, height: 18,
             background: 'var(--cth-sky)',
-            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300), 1px 2px 0 rgba(26,19,32,0.18)',
+            borderRadius: 'var(--cth-radius-xs)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.35)',
             transform: 'rotate(4deg)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-ink-900)',
+            fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-on-accent)',
             cursor: 'pointer'
           }}
         >

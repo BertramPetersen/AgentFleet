@@ -61,9 +61,10 @@ export function NeedsYouInbox() {
 
       {error && (
         <div style={{
-          padding: '5px 12px', background: 'var(--cth-coral-light)',
+          padding: '5px 12px', background: 'var(--cth-status-blocked-bg)',
+          borderBottom: '1px solid var(--cth-status-blocked-bd)',
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-          color: 'var(--cth-ink-900)'
+          color: 'var(--cth-status-blocked)'
         }}>{error}</div>
       )}
 
@@ -122,21 +123,25 @@ function AskCard({
 
   return (
     <div style={{
-      boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-      background: 'var(--cth-paper-100)'
+      boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+      borderRadius: 'var(--cth-radius-md)',
+      overflow: 'hidden',
+      background: 'var(--cth-cream-100)'
     }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 9, padding: '8px 12px',
-        background: 'var(--cth-cream-200)', borderBottom: '1px solid var(--cth-ink-100)',
+        display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px',
+        background: 'var(--cth-paper-100)', borderBottom: '1px solid var(--cth-ink-100)',
         flexWrap: 'wrap'
       }}>
         <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5, padding: '1px 7px',
-          background: age.urgent ? 'var(--cth-coral-light)' : 'var(--cth-paper-200)',
-          boxShadow: `inset 0 0 0 1px ${age.urgent ? 'var(--cth-status-blocked)' : 'var(--cth-ink-100)'}`,
-          fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+          display: 'inline-flex', alignItems: 'center', gap: 5, padding: '1px 8px',
+          borderRadius: 'var(--cth-radius-pill)',
+          background: age.urgent ? 'var(--cth-status-blocked-bg)' : 'var(--cth-status-idle-bg)',
+          boxShadow: `inset 0 0 0 1px ${age.urgent ? 'var(--cth-status-blocked-bd)' : 'var(--cth-status-idle-bd)'}`,
+          fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)', fontWeight: 600,
           color: age.urgent ? 'var(--cth-status-blocked)' : 'var(--cth-ink-700)'
         }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flex: '0 0 6px' }} />
           waiting {age.text}
         </span>
         <span style={{
@@ -152,7 +157,8 @@ function AskCard({
           <span style={{
             padding: '1px 6px', fontFamily: 'var(--cth-font-mono)',
             fontSize: 'var(--cth-text-mono-sm)', color: 'var(--cth-ink-700)',
-            boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)'
+            borderRadius: 'var(--cth-radius-xs)',
+            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
           }}>{ask.task.projectId}</span>
         )}
         {agentName && (
@@ -183,9 +189,10 @@ function AskCard({
           rows={3}
           placeholder="Answer it, or describe what you did…"
           style={{
-            width: '100%', resize: 'vertical', padding: '6px 8px',
+            width: '100%', resize: 'vertical', padding: '7px 9px',
+            borderRadius: 'var(--cth-radius-sm)',
             background: 'var(--cth-paper-100)', border: 'none',
-            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+            boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-md)',
             color: 'var(--cth-ink-900)', outline: 'none'
           }}

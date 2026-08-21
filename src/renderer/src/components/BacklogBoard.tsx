@@ -147,7 +147,8 @@ export function BacklogBoard() {
                 }}
                 placeholder="one line describing the outcome…"
                 style={{
-                  width: 260, padding: '4px 8px',
+                  width: 260, padding: '4px 9px',
+                  borderRadius: 'var(--cth-radius-sm)',
                   fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
                   background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)',
                   border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', outline: 'none'
@@ -162,9 +163,10 @@ export function BacklogBoard() {
 
       {error && (
         <div style={{
-          padding: '5px 12px', background: 'var(--cth-coral-light)',
+          padding: '5px 12px', background: 'var(--cth-status-blocked-bg)',
+          borderBottom: '1px solid var(--cth-status-blocked-bd)',
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-          color: 'var(--cth-ink-900)'
+          color: 'var(--cth-status-blocked)'
         }}>{error}</div>
       )}
 
@@ -190,7 +192,7 @@ export function BacklogBoard() {
                 padding: '6px 12px', background: 'var(--cth-cream-200)',
                 borderTop: '1px solid var(--cth-ink-100)', borderBottom: '1px solid var(--cth-ink-100)',
                 fontFamily: 'var(--cth-font-display)', fontSize: 'var(--cth-text-display-sm)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cth-ink-500)'
+                textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--cth-ink-500)'
               }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: tone }} />
                 {label} · {rows.length}
@@ -326,7 +328,8 @@ function MoveButton({ dir, disabled, onClick }: { dir: 'up' | 'down'; disabled: 
       title={dir === 'up' ? 'Move up the backlog' : 'Move down the backlog'}
       style={{
         width: 20, height: 18, border: 'none', cursor: disabled ? 'default' : 'pointer',
-        background: 'var(--cth-paper-200)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+        borderRadius: 'var(--cth-radius-xs)',
+        background: 'var(--cth-paper-100)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
         color: disabled ? 'var(--cth-ink-300)' : 'var(--cth-ink-700)',
         fontFamily: 'var(--cth-font-ui)', fontSize: 10, lineHeight: 1, padding: 0
       }}
@@ -365,7 +368,7 @@ function TaskDetail({
 
   return (
     <div style={{
-      padding: '10px 12px 12px', background: 'var(--cth-paper-200)',
+      padding: '10px 12px 12px', background: 'var(--cth-cream-200)',
       display: 'flex', flexDirection: 'column', gap: 10
     }}>
       {task.description && (
@@ -428,8 +431,9 @@ function TaskDetail({
           {CONTRACT_FIELDS.map(({ key, label, hint }) => (
             <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
               <span style={{
-                fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-                color: 'var(--cth-ink-700)'
+                fontFamily: 'var(--cth-font-display)', fontSize: 'var(--cth-text-display-sm)',
+                textTransform: 'uppercase', letterSpacing: '0.1em',
+                color: 'var(--cth-lemon)'
               }}>{label}</span>
               <textarea
                 value={draft[key] ?? ''}
@@ -437,7 +441,8 @@ function TaskDetail({
                 placeholder={hint}
                 rows={2}
                 style={{
-                  resize: 'vertical', padding: '5px 7px', width: '100%',
+                  resize: 'vertical', padding: '6px 8px', width: '100%',
+                  borderRadius: 'var(--cth-radius-sm)',
                   background: 'var(--cth-paper-100)', border: 'none',
                   boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
                   fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
@@ -494,6 +499,7 @@ function TaskDetail({
 
 const selectStyle: React.CSSProperties = {
   padding: '3px 6px', background: 'var(--cth-paper-100)', border: 'none',
+  borderRadius: 'var(--cth-radius-sm)',
   boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
   fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
   color: 'var(--cth-ink-900)'

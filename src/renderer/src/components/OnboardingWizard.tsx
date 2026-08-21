@@ -186,9 +186,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      background: 'var(--cth-cream-200)',
-      backgroundImage:
-        `repeating-linear-gradient(45deg, rgba(232, 217, 160, 0.4) 0 1px, transparent 1px 8px)`,
+      background: 'var(--cth-cream-50)',
       // Scroll the overlay rather than clip the wizard. Step 2 lists every
       // installed CLI engine (8 rows + a model select), which is taller than a
       // 1080p-class window once the OS chrome is subtracted — the panel was
@@ -445,8 +443,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         {p.id === 'claude' && (
                           <span style={{
                             fontSize: 10, padding: '1px 5px', lineHeight: '16px',
-                            background: 'var(--cth-lemon)',
-                            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+                            background: 'var(--cth-lemon)', color: 'var(--cth-on-accent)',
+                            borderRadius: 'var(--cth-radius-xs)',
                             fontFamily: 'var(--cth-font-display)', flexShrink: 0
                           }}>RECOMMENDED</span>
                         )}

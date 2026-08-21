@@ -72,8 +72,8 @@ export function ProjectRail() {
     <div style={{
       width: 208, flex: '0 0 208px', minHeight: 0, overflowY: 'auto',
       background: 'var(--cth-cream-200)',
-      borderRight: '1px solid var(--cth-ink-300)',
-      display: 'flex', flexDirection: 'column', padding: '8px 6px', gap: 2
+      borderRight: '1px solid var(--cth-ink-100)',
+      display: 'flex', flexDirection: 'column', padding: '10px 8px', gap: 2
     }}>
       <RailHead>Workspace</RailHead>
       <RailItem
@@ -159,8 +159,8 @@ function RailHead({ children }: { children: React.ReactNode }) {
     <div style={{
       fontFamily: 'var(--cth-font-display)',
       fontSize: 'var(--cth-text-display-sm)',
-      textTransform: 'uppercase', letterSpacing: '0.08em',
-      color: 'var(--cth-ink-500)', padding: '10px 8px 4px'
+      textTransform: 'uppercase', letterSpacing: '0.12em',
+      color: 'var(--cth-ink-500)', padding: '10px 8px 5px'
     }}>{children}</div>
   );
 }
@@ -183,10 +183,10 @@ function RailItem({
       onClick={onClick}
       title={title ?? label}
       style={{
-        display: 'flex', alignItems: 'center', gap: 7, width: '100%',
-        padding: '5px 8px', border: 'none', cursor: 'pointer', textAlign: 'left',
-        background: on ? 'var(--cth-cream-100)' : 'transparent',
-        boxShadow: on ? 'inset 2px 0 0 var(--cth-ink-900)' : 'none',
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+        padding: '6px 8px', border: 'none', cursor: 'pointer', textAlign: 'left',
+        borderRadius: 'var(--cth-radius-sm)',
+        background: on ? 'var(--cth-paper-200)' : 'transparent',
         fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
         color: on ? 'var(--cth-ink-900)' : 'var(--cth-ink-700)'
       }}

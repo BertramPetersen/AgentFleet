@@ -14,9 +14,13 @@ export interface PixelButtonProps {
   title?: string;
 }
 
-const heightBySize: Record<Size, number> = { sm: 24, md: 32, lg: 40 };
-const padBySize: Record<Size, string> = { sm: '0 8px', md: '0 12px', lg: '0 16px' };
+const heightBySize: Record<Size, number> = { sm: 22, md: 28, lg: 34 };
+const padBySize: Record<Size, string> = { sm: '0 9px', md: '0 11px', lg: '0 14px' };
 
+/* The mock's button set (.mk-btn): 6px radius, 1px border, s2 fill. Primary is
+   the accent fill with near-black text; ghost drops fill and border entirely;
+   destructive is the quiet red outline ("Stop cleanly" in mock C), because a
+   solid red button next to a terminal reads as an alarm, not a control. */
 export function PixelButton({
   variant = 'primary',
   size = 'md',
@@ -30,50 +34,37 @@ export function PixelButton({
   const [pressed, setPressed] = useState(false);
   const [hover, setHover] = useState(false);
 
-  // DISABLED TEXT IS ITS OWN COLOR, not the variant's.
-  //
-  // Every variant swaps its FILL to `--cth-cream-300` when disabled, but the
-  // variants used to keep their enabled text token — and `primary`'s is
-  // `--cth-cream-50`, the INVERSE foreground picked to sit on an ink-900 button.
-  // On the cream-300 disabled fill that pairing collapses: in dark mode it is
-  // #1A191E text on #37363E (~1.4:1, effectively invisible), and in light mode a
-  // near-white #FFFDF5 on tan, which is barely better. That is why a disabled
-  // Send or Dispatch reads as an empty box.
-  //
-  // `--cth-ink-500` is the one foreground that works against cream-300 in BOTH
-  // themes, because both tokens flip together — and a muted label is what a
-  // disabled control should look like anyway.
   const disabledText = 'var(--cth-ink-500)';
 
   const palette = (() => {
     switch (variant) {
       case 'primary':
         return {
-          fill:    disabled ? 'var(--cth-cream-300)' : (hover ? 'var(--cth-ink-700)' : 'var(--cth-ink-900)'),
-          text:    disabled ? disabledText : 'var(--cth-cream-50)',
-          border:  'var(--cth-ink-900)',
-          shadow:  'var(--cth-ink-900)'
+          fill:   disabled ? 'var(--cth-cream-300)' : (hover ? '#F7DD7E' : 'var(--cth-lemon)'),
+          text:   disabled ? disabledText : 'var(--cth-on-accent)',
+          border: disabled ? 'var(--cth-ink-100)' : 'var(--cth-lemon)',
+          weight: 650
         };
       case 'secondary':
         return {
-          fill:    disabled ? 'var(--cth-cream-300)' : (hover ? 'var(--cth-cream-200)' : 'var(--cth-cream-100)'),
-          text:    disabled ? disabledText : 'var(--cth-ink-900)',
-          border:  'var(--cth-ink-300)',
-          shadow:  'var(--cth-ink-100)'
+          fill:   disabled ? 'var(--cth-cream-300)' : (hover ? 'var(--cth-paper-200)' : 'var(--cth-paper-100)'),
+          text:   disabled ? disabledText : 'var(--cth-ink-900)',
+          border: 'var(--cth-ink-300)',
+          weight: 500
         };
       case 'ghost':
         return {
-          fill:    hover ? 'var(--cth-cream-200)' : 'transparent',
-          text:    disabled ? disabledText : 'var(--cth-ink-700)',
-          border:  'var(--cth-ink-300)',
-          shadow:  'var(--cth-ink-100)'
+          fill:   hover && !disabled ? 'var(--cth-paper-100)' : 'transparent',
+          text:   disabled ? disabledText : 'var(--cth-ink-700)',
+          border: 'transparent',
+          weight: 500
         };
       case 'destructive':
         return {
-          fill:    disabled ? 'var(--cth-cream-300)' : (hover ? 'var(--cth-coral-light)' : 'var(--cth-coral)'),
-          text:    disabled ? disabledText : 'var(--cth-ink-900)',
-          border:  'var(--cth-ink-500)',
-          shadow:  'var(--cth-ink-300)'
+          fill:   disabled ? 'var(--cth-cream-300)' : (hover ? 'var(--cth-status-blocked-bg)' : 'var(--cth-paper-100)'),
+          text:   disabled ? disabledText : 'var(--cth-coral)',
+          border: disabled ? 'var(--cth-ink-100)' : 'var(--cth-status-blocked-bd)',
+          weight: 500
         };
     }
   })();
@@ -93,13 +84,12 @@ export function PixelButton({
         background: palette.fill,
         color: palette.text,
         border: 'none',
-        // v0.3.4: 1px hairline + 1px lift — the 2px chrome read as heavy boxes
-        boxShadow: pressed && !disabled
-          ? `inset 0 0 0 1px ${palette.border}`
-          : `inset 0 0 0 1px ${palette.border}, 0 1px 0 ${palette.shadow}`,
+        borderRadius: 'var(--cth-radius-sm)',
+        boxShadow: `inset 0 0 0 1px ${palette.border}`,
         transform: pressed && !disabled ? 'translateY(1px)' : 'none',
         fontFamily: 'var(--cth-font-ui)',
         fontSize: size === 'lg' ? 'var(--cth-text-body-md)' : 'var(--cth-text-body-sm)',
+        fontWeight: palette.weight,
         cursor: disabled ? 'not-allowed' : 'pointer',
         width: fullWidth ? '100%' : 'auto',
         userSelect: 'none',

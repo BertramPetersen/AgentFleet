@@ -103,9 +103,10 @@ export function InterveneRail({ agentId, live }: { agentId: string; live: boolea
           rows={4}
           placeholder="What should it do differently? Injected as context on its next turn — no keystrokes, no interrupt."
           style={{
-            width: '100%', resize: 'vertical', padding: '6px 8px',
+            width: '100%', resize: 'vertical', padding: '7px 9px',
+            borderRadius: 'var(--cth-radius-sm)',
             background: 'var(--cth-paper-100)', border: 'none',
-            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+            boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
             color: 'var(--cth-ink-900)', outline: 'none'
           }}
@@ -118,11 +119,12 @@ export function InterveneRail({ agentId, live }: { agentId: string; live: boolea
         </div>
         {!!snap?.pendingSteers && (
           <div style={{
-            marginTop: 8, padding: '4px 7px',
-            background: 'var(--cth-sky-light)',
-            boxShadow: 'inset 0 0 0 1px var(--cth-status-thinking)',
+            marginTop: 8, padding: '4px 8px',
+            borderRadius: 'var(--cth-radius-sm)',
+            background: 'var(--cth-status-thinking-bg)',
+            boxShadow: 'inset 0 0 0 1px var(--cth-status-thinking-bd)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-            color: 'var(--cth-ink-900)'
+            color: 'var(--cth-status-thinking)'
           }}>
             {snap.pendingSteers} pending — waiting for this agent's next hook boundary
           </div>
@@ -176,13 +178,14 @@ export function InterveneRail({ agentId, live }: { agentId: string; live: boolea
                   )}
                   title={on ? `Allow ${tool} again` : `Deny every ${tool} call from the next one on`}
                   style={{
-                    padding: '2px 7px', cursor: busy ? 'default' : 'pointer', border: 'none',
+                    padding: '2px 8px', cursor: busy ? 'default' : 'pointer', border: 'none',
+                    borderRadius: 'var(--cth-radius-sm)',
                     fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
-                    background: on ? 'var(--cth-coral-light)' : 'var(--cth-paper-200)',
+                    background: on ? 'var(--cth-status-blocked-bg)' : 'var(--cth-paper-100)',
                     boxShadow: on
-                      ? 'inset 0 0 0 1px var(--cth-status-blocked)'
-                      : 'inset 0 0 0 1px var(--cth-ink-100)',
-                    color: 'var(--cth-ink-900)',
+                      ? 'inset 0 0 0 1px var(--cth-status-blocked-bd)'
+                      : 'inset 0 0 0 1px var(--cth-ink-300)',
+                    color: on ? 'var(--cth-status-blocked)' : 'var(--cth-ink-900)',
                     textDecoration: on ? 'line-through' : 'none'
                   }}
                 >
@@ -212,7 +215,7 @@ const label: React.CSSProperties = {
   fontFamily: 'var(--cth-font-display)',
   fontSize: 'var(--cth-text-display-sm)',
   textTransform: 'uppercase',
-  letterSpacing: '0.06em',
+  letterSpacing: '0.12em',
   color: 'var(--cth-ink-500)'
 };
 

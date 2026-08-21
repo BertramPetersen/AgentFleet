@@ -167,11 +167,12 @@ export function FleetTable() {
           title="Show only agents blocked on you, waiting, or breaker-armed"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '3px 8px', cursor: 'pointer', border: 'none',
+            padding: '3px 9px', cursor: 'pointer', border: 'none',
+            borderRadius: 'var(--cth-radius-sm)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-            background: onlyAttention ? 'var(--cth-coral-light)' : 'var(--cth-paper-200)',
-            boxShadow: onlyAttention ? 'inset 0 0 0 1px var(--cth-status-blocked)' : 'var(--cth-panel-border-inset)',
-            color: 'var(--cth-ink-900)'
+            background: onlyAttention ? 'var(--cth-status-blocked-bg)' : 'var(--cth-paper-100)',
+            boxShadow: onlyAttention ? 'inset 0 0 0 1px var(--cth-status-blocked-bd)' : 'inset 0 0 0 1px var(--cth-ink-300)',
+            color: onlyAttention ? 'var(--cth-status-blocked)' : 'var(--cth-ink-900)'
           }}
         >
           <span style={{
@@ -186,8 +187,10 @@ export function FleetTable() {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
             padding: '3px 9px', cursor: 'pointer', border: 'none',
+            borderRadius: 'var(--cth-radius-sm)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-            background: 'var(--cth-ink-900)', color: 'var(--cth-cream-100)'
+            fontWeight: 650,
+            background: 'var(--cth-lemon)', color: 'var(--cth-on-accent)'
           }}
         >
           <Icon name="plus" /> agent
@@ -198,10 +201,11 @@ export function FleetTable() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="filter by agent, project, model, tool…"
           style={{
-            flex: '1 1 180px', minWidth: 120, padding: '4px 8px',
+            flex: '1 1 180px', minWidth: 120, padding: '4px 9px',
+            borderRadius: 'var(--cth-radius-sm)',
             fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
             background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)',
-            border: 'none', boxShadow: 'var(--cth-panel-border-inset)'
+            border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)', outline: 'none'
           }}
         />
       </div>
@@ -271,11 +275,12 @@ export function FleetTable() {
               style={{
                 display: 'grid', gridTemplateColumns: GRID, gap: 10,
                 alignItems: 'center', padding: '7px 12px', cursor: 'pointer',
-                background: on ? 'var(--cth-cream-200)' : 'transparent',
+                background: on ? 'var(--cth-paper-100)' : (hoverId === a.id ? 'var(--cth-cream-200)' : 'transparent'),
                 boxShadow: [
                   'inset 0 -1px 0 var(--cth-ink-100)',
-                  on ? `inset 3px 0 0 var(--cth-${a.accent})` : '',
-                  armed ? 'inset 0 0 0 1px var(--cth-status-looping)' : ''
+                  on ? 'inset 2px 0 0 var(--cth-lemon)'
+                    : a.status === 'blocked' ? 'inset 2px 0 0 var(--cth-status-blocked)' : '',
+                  armed ? 'inset 0 0 0 1px var(--cth-status-looping-bd)' : ''
                 ].filter(Boolean).join(', '),
                 opacity: a.status === 'ghost' ? 0.55 : 1
               }}
@@ -325,9 +330,10 @@ export function FleetTable() {
               {/* context */}
               <span style={{ minWidth: 0 }}>
                 <span style={{
-                  display: 'block', height: 4, background: 'var(--cth-cream-300)', overflow: 'hidden'
+                  display: 'block', height: 4, background: 'var(--cth-cream-300)',
+                  borderRadius: 2, overflow: 'hidden'
                 }}>
-                  <span style={{ display: 'block', height: '100%', width: `${Math.round(pct * 100)}%`, background: ctxColor }} />
+                  <span style={{ display: 'block', height: '100%', width: `${Math.round(pct * 100)}%`, background: ctxColor, borderRadius: 2 }} />
                 </span>
                 <span style={{
                   fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
@@ -361,9 +367,10 @@ export function FleetTable() {
                   onClick={(e) => { e.stopPropagation(); openInspector(a.id); }}
                   title={`Open ${a.name} in the inspector`}
                   style={{
-                    marginLeft: 'auto', padding: '1px 6px', border: 'none', cursor: 'pointer',
+                    marginLeft: 'auto', padding: '1px 7px', border: 'none', cursor: 'pointer',
+                    borderRadius: 'var(--cth-radius-sm)',
                     fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
-                    background: 'var(--cth-cream-100)',
+                    background: 'var(--cth-paper-100)',
                     boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
                     color: 'var(--cth-ink-900)',
                     visibility: (hoverId === a.id || on) ? 'visible' : 'hidden'
