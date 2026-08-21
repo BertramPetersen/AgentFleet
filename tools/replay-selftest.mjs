@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+/**
+ * Behavioral spec for the assignment rules, run through the REAL replay
+ * harness — not unit tests around the function, but a synthesized hive
+ * history driven through the same git-walking path a recorded hive takes.
+ * `npm run replay:selftest` — exits non-zero when any assertion fails, so it
+ * can gate CI the same way typecheck does.
+ *
+ * The scenario (two ledger commits):
+ *   T0  pe-1 contracted, unassigned            → idle-pull to impl-1
+ *       pe-2 contracted, labels ["tests"]      → idle-pull to test-1 (capability)
+ *       pe-3 NO contract, unassigned           → hold
+ *       it-1 contracted, explicit docs-1       → explicit-assignee dispatch
+ *       x-1  contracted, NO project            → hold (unfiled)
+ *   T1  "what the dispatcher actually did":
+ *       pe-1 → impl-1 (AGREE)   pe-2 → impl-1 (DIFFER — rules wanted test-1)
+ *       pe-3 → test-1 (DISPATCHER-DID on a no-contract hold — the leak the
+ *       retuned prompt is meant to end)   it-1, x-1 untouched
+ */
+
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const hive = mkdtempSync(join(tmpdir(), 'replay-fixture-'));
+const git = (...a) => execFileSync('git', ['-C', hive, ...a], { encoding: 'utf8' });
+
+git('init', '-q');
+git('config', 'user.name', 'Hive');
+git('config', 'user.email', 'hive@local');
+
+const REPO = '/repos/pricing-engine';
+const DOCS = '/repos/internal-tools';
+
+const write = (name, obj) => writeFileSync(join(hive, name), JSON.stringify(obj, null, 2));
+const commit = (msg) => { git('add', '-A'); git('commit', '-q', '-m', msg); };
+
+write('registry.json', {
+  godId: 'god',
+  agents: {
+    god: { id: 'god', name: 'Orchestrator', cwd: '/hive', isGod: true, role: 'orchestrator (god)', status: 'idle', lastSeen: 1 },
+    'impl-1': { id: 'impl-1', name: 'impl-1', cwd: REPO, role: 'implementation', capabilities: ['backend'], status: 'idle', lastSeen: 1 },
+    'test-1': { id: 'test-1', name: 'test-1', cwd: `${REPO}/agent/test-1`, role: 'tests', status: 'idle', lastSeen: 1 },
+    'docs-1': { id: 'docs-1', name: 'docs-1', cwd: DOCS, role: 'docs', status: 'idle', lastSeen: 1 }
+  }
+});
+write('projects.json', {
+  projects: [
+    { id: 'pricing-engine', name: 'pricing-engine', repoPath: REPO, isolation: 'worktree-per-agent', members: [], createdAt: 't' },
+    { id: 'internal-tools', name: 'internal-tools', repoPath: DOCS, isolation: 'shared', members: [], createdAt: 't' }
+  ]
+});
+commit('hive: register fleet');
+
+const contract = { objective: 'do the thing', output: 'the thing, done' };
+const t0 = [
+  { id: 'pe-1', title: 'Backfill curves', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-01', projectId: 'pricing-engine', rank: '000010', contract },
+  { id: 'pe-2', title: 'Property-test the kernel', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-02', projectId: 'pricing-engine', rank: '000020', labels: ['tests'], contract },
+  { id: 'pe-3', title: 'Cache the vol surface', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-03', projectId: 'pricing-engine', rank: '000030' },
+  { id: 'it-1', title: 'Document the API', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-04', projectId: 'internal-tools', rank: '000010', assignee: 'docs-1', contract },
+  { id: 'x-1', title: 'A card with no home', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-05', contract }
+];
+write('tasks.json', { tasks: t0 });
+commit('hive: tasks (5)');
+
+const t1 = t0.map((t) => {
+  if (t.id === 'pe-1') return { ...t, assignee: 'impl-1', status: 'doing' };
+  if (t.id === 'pe-2') return { ...t, assignee: 'impl-1' };            // dispatcher disagreed with the capability match
+  if (t.id === 'pe-3') return { ...t, assignee: 'test-1' };            // dispatched WITHOUT a contract
+  return t;
+});
+write('tasks.json', { tasks: t1 });
+commit('hive: tasks (5)');
+
+// ── run the real harness over it ────────────────────────────────────────────
+const traceFile = join(hive, 'trace.jsonl');
+execFileSync('node', [join(repoRoot, 'tools', 'replay-assignment.mjs'), hive, '--jsonl', traceFile], { encoding: 'utf8' });
+const trace = readFileSync(traceFile, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+
+const strictOut = execFileSync('node', [join(repoRoot, 'tools', 'replay-assignment.mjs'), hive, '--strict-idle'], { encoding: 'utf8' });
+
+let failures = 0;
+const expect = (cond, what) => {
+  if (cond) { console.log(`ok   ${what}`); return; }
+  console.error(`FAIL ${what}`);
+  failures++;
+};
+
+const at = (task, rule) => trace.filter((r) => r.task.endsWith(task) && r.rule === rule);
+
+expect(at('pe-1', 'idle-pull').some((r) => r.decision === 'dispatch→impl-1' && r.outcome === 'AGREE'),
+  'pe-1: idle-pull to impl-1, history agrees');
+expect(at('pe-2', 'idle-pull').some((r) => r.decision === 'dispatch→test-1' && r.outcome === 'DIFFER'),
+  'pe-2: capability match picks test-1, dispatcher differed');
+expect(at('pe-3', 'no-contract').some((r) => r.outcome === 'DISPATCHER-DID'),
+  'pe-3: contract-less dispatch is caught as DISPATCHER-DID');
+expect(at('it-1', 'explicit-assignee').some((r) => r.decision === 'dispatch→docs-1'),
+  'it-1: explicit assignee honored');
+expect(trace.filter((r) => r.task.endsWith('x-1')).every((r) => r.rule === 'unfiled' && r.outcome === 'HOLD'),
+  'x-1: unfiled card is always held for the dispatcher');
+expect(trace.every((r) => !(r.decision.startsWith('dispatch→') && r.decision.includes('→god'))),
+  'the orchestrator never pulls backlog cards');
+expect(!/idle-pull/.test(strictOut),
+  '--strict-idle disables the pull rule entirely');
+
+if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
+console.log('\nreplay selftest: all assertions hold');
