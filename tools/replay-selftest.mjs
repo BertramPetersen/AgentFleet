@@ -34,6 +34,7 @@ git('config', 'user.email', 'hive@local');
 
 const REPO = '/repos/pricing-engine';
 const DOCS = '/repos/internal-tools';
+const CAPPED = '/repos/budget-engine';
 
 const write = (name, obj) => writeFileSync(join(hive, name), JSON.stringify(obj, null, 2));
 const commit = (msg) => { git('add', '-A'); git('commit', '-q', '-m', msg); };
@@ -44,15 +45,23 @@ write('registry.json', {
     god: { id: 'god', name: 'Orchestrator', cwd: '/hive', isGod: true, role: 'orchestrator (god)', status: 'idle', lastSeen: 1 },
     'impl-1': { id: 'impl-1', name: 'impl-1', cwd: REPO, role: 'implementation', capabilities: ['backend'], status: 'idle', lastSeen: 1 },
     'test-1': { id: 'test-1', name: 'test-1', cwd: `${REPO}/agent/test-1`, role: 'tests', status: 'idle', lastSeen: 1 },
-    'docs-1': { id: 'docs-1', name: 'docs-1', cwd: DOCS, role: 'docs', status: 'idle', lastSeen: 1 }
+    'docs-1': { id: 'docs-1', name: 'docs-1', cwd: DOCS, role: 'docs', status: 'idle', lastSeen: 1 },
+    'spend-1': { id: 'spend-1', name: 'spend-1', cwd: CAPPED, role: 'implementation', status: 'idle', lastSeen: 1 }
   }
 });
 write('projects.json', {
   projects: [
     { id: 'pricing-engine', name: 'pricing-engine', repoPath: REPO, isolation: 'worktree-per-agent', members: [], createdAt: 't' },
-    { id: 'internal-tools', name: 'internal-tools', repoPath: DOCS, isolation: 'shared', members: [], createdAt: 't' }
+    { id: 'internal-tools', name: 'internal-tools', repoPath: DOCS, isolation: 'shared', members: [], createdAt: 't' },
+    { id: 'budget-engine', name: 'budget-engine', repoPath: CAPPED, isolation: 'shared', members: [], budgetUsd: 5, createdAt: 't' }
   ]
 });
+// The durable ledger: cumulative per-session snapshots — spend is the
+// per-session MAX, so these two rows are $6 total, not $10 (over the $5 cap).
+writeFileSync(join(hive, 'cost-ledger.jsonl'), [
+  JSON.stringify({ agent_id: 'spend-1', session_id: 's1', ts: 1, usd: 4 }),
+  JSON.stringify({ agent_id: 'spend-1', session_id: 's1', ts: 2, usd: 6 })
+].join('\n') + '\n');
 commit('hive: register fleet');
 
 const contract = { objective: 'do the thing', output: 'the thing, done' };
@@ -61,7 +70,9 @@ const t0 = [
   { id: 'pe-2', title: 'Property-test the kernel', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-02', projectId: 'pricing-engine', rank: '000020', labels: ['tests'], contract },
   { id: 'pe-3', title: 'Cache the vol surface', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-03', projectId: 'pricing-engine', rank: '000030' },
   { id: 'it-1', title: 'Document the API', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-04', projectId: 'internal-tools', rank: '000010', assignee: 'docs-1', contract },
-  { id: 'x-1', title: 'A card with no home', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-05', contract }
+  { id: 'x-1', title: 'A card with no home', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-05', contract },
+  { id: 'be-1', title: 'More work for a capped project', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-06', projectId: 'budget-engine', rank: '000010', contract },
+  { id: 'be-2', title: 'Explicitly assigned into the cap', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-07', projectId: 'budget-engine', rank: '000020', assignee: 'spend-1', contract }
 ];
 write('tasks.json', { tasks: t0 });
 commit('hive: tasks (5)');
@@ -105,6 +116,10 @@ expect(trace.every((r) => !(r.decision.startsWith('dispatch→') && r.decision.i
   'the orchestrator never pulls backlog cards');
 expect(!/idle-pull/.test(strictOut),
   '--strict-idle disables the pull rule entirely');
+expect(at('be-1', 'over-budget').length > 0 && at('be-1', 'over-budget').every((r) => r.outcome === 'HOLD'),
+  'be-1: a capped project dispatches nothing ($6 spent of $5 — per-session max, not row sum)');
+expect(at('be-2', 'over-budget').length > 0,
+  'be-2: even an explicit assignee is held while the project is over budget');
 
 if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
 console.log('\nreplay selftest: all assertions hold');

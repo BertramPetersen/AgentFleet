@@ -26,6 +26,7 @@ import {
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { ProjectStore } from './projects';
 import { AssignmentEngine } from './assignmentEngine';
+import { ledgerSpendReader, projectSpend } from './budget';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -242,9 +243,23 @@ const projects = new ProjectStore(hive);
 // and handed to the engine; the rules themselves live in assignment.ts and are
 // replayable over any recorded hive with `npm run replay`.
 const IDLE_AFTER_SEC = 120;
+const ledgerSpend = ledgerSpendReader(() => {
+  const root = hive.root();
+  return root ? join(root, 'cost-ledger.jsonl') : null;
+});
+/** One number for everywhere: the rules' over-budget check and the renderer's
+ *  project rollup both read THIS. */
+function projectSpendNow(): Map<string, number> {
+  try {
+    return projectSpend(projects.list(), Object.values(hive.registry().agents), ledgerSpend());
+  } catch {
+    return new Map();
+  }
+}
 const assigner = new AssignmentEngine({
   hive,
   projects,
+  projectSpend: projectSpendNow,
   idleAgents: () => {
     const idle = new Set<string>();
     try {
@@ -2028,7 +2043,7 @@ function floorCascade(): WindowBounds | null {
   return clampBounds({ x: b.x + OFFSET, y: b.y + OFFSET, width: b.width, height: b.height });
 }
 
-// ─── Shareable hires: munderdifflin:// deep link + file import ──────────────
+// ─── Shareable hires: agentfleet:// deep link + file import ──────────────
 // A hire manifest NEVER auto-spawns: it is validated, then handed to the
 // renderer, which pre-fills the Add-Agent modal for human review. See
 // src/shared/hire.ts for the spec + security model.
@@ -2073,10 +2088,10 @@ async function handleHireLink(link: string): Promise<void> {
 // exe+args form or the registration points at electron.exe with no entry.
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('munderdifflin', process.execPath, [resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient('agentfleet', process.execPath, [resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient('munderdifflin');
+  app.setAsDefaultProtocolClient('agentfleet');
 }
 
 // Deep links on Windows/Linux arrive as the argv of a SECOND process — take the
@@ -2093,7 +2108,7 @@ if (!gotInstanceLock) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    const link = argv.find((a) => a.startsWith('munderdifflin://'));
+    const link = argv.find((a) => a.startsWith('agentfleet://'));
     if (link) void handleHireLink(link);
   });
 }
@@ -2145,8 +2160,8 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     ...(geom && geom.x !== undefined && geom.y !== undefined ? { x: geom.x, y: geom.y } : {}),
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
-    title: isFloor ? 'Munder Difflin — Floor' : 'Munder Difflin',
-    backgroundColor: '#FFF8E7',
+    title: isFloor ? 'AgentFleet — Fleet' : 'AgentFleet',
+    backgroundColor: '#0D1117',
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {
@@ -3237,6 +3252,10 @@ ipcMain.handle('projects:list', async () => {
     archived: a.archived
   })));
   return projects.list();
+});
+ipcMain.handle('projects:spend', () => {
+  if (!hive.enabled()) return {};
+  return Object.fromEntries(projectSpendNow());
 });
 ipcMain.handle('projects:upsert', (_evt, project: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
@@ -4807,7 +4826,7 @@ app.whenReady().then(() => {
   });
 
   // A cold-start deep link (Windows/Linux) rides in on OUR argv.
-  const startupHireLink = process.argv.find((a) => a.startsWith('munderdifflin://'));
+  const startupHireLink = process.argv.find((a) => a.startsWith('agentfleet://'));
   if (startupHireLink) void handleHireLink(startupHireLink);
 
   // Hand every spawned agent the path to the Slack reply discovery file via the

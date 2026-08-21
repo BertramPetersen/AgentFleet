@@ -43,12 +43,15 @@ export function BacklogBoard() {
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState<string | null>(null); // null = composer closed
+  const [spend, setSpend] = useState<Record<string, number>>({});
+  const [budgetDraft, setBudgetDraft] = useState<string | null>(null); // null = not editing
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback((): void => {
     window.cth.hiveTasks?.().then((raw) => setTasks(parseTasks(raw))).catch(() => { /* hive off */ });
     window.cth.projectsList?.().then((list) => setProjects(list ?? [])).catch(() => { /* hive off */ });
+    window.cth.projectsSpend?.().then((m) => setSpend(m ?? {})).catch(() => { /* hive off */ });
   }, []);
 
   useEffect(() => {
@@ -107,6 +110,18 @@ export function BacklogBoard() {
     void mutate(() => window.cth.hiveAddTask(task as Parameters<typeof window.cth.hiveAddTask>[0]));
   };
 
+  const overBudget = !!project?.budgetUsd && project.budgetUsd > 0
+    && (spend[project.id] ?? 0) >= project.budgetUsd;
+
+  const saveBudget = (): void => {
+    if (!project || budgetDraft === null) return;
+    const n = Number(budgetDraft.trim());
+    if (!Number.isFinite(n) || n < 0) { setError('the budget must be a non-negative number'); return; }
+    setBudgetDraft(null);
+    // 0 clears the cap — upsert validates and drops non-positive budgets.
+    void mutate(() => window.cth.projectsUpsert({ ...project, budgetUsd: n }));
+  };
+
   return (
     <div style={{
       height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column',
@@ -126,6 +141,48 @@ export function BacklogBoard() {
             color: 'var(--cth-ink-500)'
           }}>{project.repoPath}</span>
         )}
+        {project && (budgetDraft === null ? (
+          <button
+            onClick={() => setBudgetDraft(project.budgetUsd ? String(project.budgetUsd) : '')}
+            title={project.budgetUsd
+              ? 'Spend against this project\'s budget, from the durable cost ledger — the dispatch rules stop routing work here at the cap. Click to change.'
+              : 'Set a spend ceiling — the dispatch rules stop routing work into this project once it is reached.'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '1px 8px',
+              border: 'none', cursor: 'pointer', borderRadius: 'var(--cth-radius-pill)',
+              fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
+              background: overBudget ? 'var(--cth-status-blocked-bg)' : 'var(--cth-paper-100)',
+              boxShadow: `inset 0 0 0 1px ${overBudget ? 'var(--cth-status-blocked-bd)' : 'var(--cth-ink-300)'}`,
+              color: overBudget ? 'var(--cth-status-blocked)' : 'var(--cth-ink-700)'
+            }}
+          >
+            {project.budgetUsd
+              ? `$${(spend[project.id] ?? 0).toFixed(2)} / $${project.budgetUsd.toFixed(2)}`
+              : 'set budget'}
+          </button>
+        ) : (
+          <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+            <input
+              autoFocus
+              value={budgetDraft}
+              onChange={(e) => setBudgetDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveBudget();
+                if (e.key === 'Escape') setBudgetDraft(null);
+              }}
+              placeholder="USD ceiling — 0 removes it"
+              inputMode="decimal"
+              style={{
+                width: 150, padding: '2px 8px', borderRadius: 'var(--cth-radius-sm)',
+                fontFamily: 'var(--cth-font-mono)', fontSize: 'var(--cth-text-mono-sm)',
+                background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)',
+                border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', outline: 'none'
+              }}
+            />
+            <PixelButton variant="primary" size="sm" onClick={saveBudget} disabled={busy}>save</PixelButton>
+            <PixelButton variant="secondary" size="sm" onClick={() => setBudgetDraft(null)}>cancel</PixelButton>
+          </span>
+        ))}
         <span style={{
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
           color: 'var(--cth-ink-500)'
@@ -168,6 +225,18 @@ export function BacklogBoard() {
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
           color: 'var(--cth-status-blocked)'
         }}>{error}</div>
+      )}
+
+      {overBudget && project && (
+        <div style={{
+          padding: '5px 12px', background: 'var(--cth-status-blocked-bg)',
+          borderBottom: '1px solid var(--cth-status-blocked-bd)',
+          fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+          color: 'var(--cth-status-blocked)'
+        }}>
+          Over budget — ${(spend[project.id] ?? 0).toFixed(2)} of ${(project.budgetUsd ?? 0).toFixed(2)} spent.
+          Dispatch into this project is paused until the budget is raised.
+        </div>
       )}
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
