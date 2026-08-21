@@ -54,6 +54,15 @@ const COMMANDS = {
       args: [APP_DIR, `--user-data-dir=${userDataDir()}`],
       timeout: 60_000
     });
+    // Main-process stdio → file. A tick that throws in main is invisible from
+    // the page console; this is the only window into it.
+    try {
+      const proc = app.process();
+      fs.mkdirSync(path.join(APP_DIR, '.run-shots'), { recursive: true });
+      const mainLog = fs.createWriteStream(path.join(APP_DIR, '.run-shots', 'main-stdio.log'), { flags: 'a' });
+      proc.stdout?.on('data', (d) => mainLog.write(d));
+      proc.stderr?.on('data', (d) => mainLog.write(d));
+    } catch { /* stdio not piped — older playwright */ }
     page = await app.firstWindow();
     page.on('console', (m) => {
       const line = `[${m.type()}] ${m.text()}`;
@@ -186,6 +195,11 @@ const COMMANDS = {
   // quit-confirmation modal and refuses to go, leaving Electron (and the real
   // agent process it spawned) running after the driver exits. So: ask nicely,
   // then kill the process tree.
+  async 'main-logs'() {
+    const f = path.join(APP_DIR, '.run-shots', 'main-stdio.log');
+    console.log(fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').slice(-40).join('\n') : '(no main stdio captured)');
+  },
+
   async quit() {
     if (!app) return;
     const proc = app.process();

@@ -25,6 +25,7 @@ import {
 } from './git';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { ProjectStore } from './projects';
+import { AssignmentEngine } from './assignmentEngine';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -235,6 +236,31 @@ const hive = new HiveManager(
 // AgentFleet — projects, in hive/projects.json. Writes ride HiveManager's single
 // committer, so the hive keeps exactly one writer and its git audit trail.
 const projects = new ProjectStore(hive);
+
+// Deterministic assignment (P6): the rules half of hybrid assignment. Idleness
+// is observed here — quiet in telemetry for IDLE_AFTER_SEC and an empty inbox —
+// and handed to the engine; the rules themselves live in assignment.ts and are
+// replayable over any recorded hive with `npm run replay`.
+const IDLE_AFTER_SEC = 120;
+const assigner = new AssignmentEngine({
+  hive,
+  projects,
+  idleAgents: () => {
+    const idle = new Set<string>();
+    try {
+      const reg = hive.registry();
+      const usage = new Map(telemetry.snapshot().usage.map((u) => [u.agentId, u]));
+      const now = Date.now();
+      for (const [id, a] of Object.entries(reg.agents)) {
+        if (a.archived || a.isGod || a.isAssistant) continue;
+        const u = usage.get(id);
+        const quiet = !u || (now - u.ts) / 1000 > IDLE_AFTER_SEC;
+        if (quiet && hive.inboxBacklog(id) === 0) idle.add(id);
+      }
+    } catch { /* no registry yet — nobody is idle */ }
+    return idle;
+  }
+});
 // #7C — operator control state (pause/gate/steer/halt), read by the HookServer
 // when deciding hook returns.
 const control = new ControlRegistry();
@@ -262,6 +288,7 @@ const breaker = new CircuitBreaker(() => {
 // Michael reads + the breaker beat, so guardrails + monitoring work even when the
 // heartbeat mission is disabled (it ships off).
 let fleetTimer: ReturnType<typeof setInterval> | null = null;
+let assignTimer: ReturnType<typeof setInterval> | null = null;
 let breakerBeatTimer: ReturnType<typeof setInterval> | null = null;
 // Feed the breaker's api_error-storm trip from Oscar's OTel api_error spans —
 // Jim's one breaker input with no on-branch source (telemetry.onApiError seam).
@@ -4672,6 +4699,12 @@ function armAlwaysOnBeats(): void {
   fleetTimer = setInterval(writeFleetSnapshot, 8_000);
   if (breakerBeatTimer) clearInterval(breakerBeatTimer);
   breakerBeatTimer = setInterval(() => { try { runBreakerBeat(300_000); } catch (e) { console.error('[breaker beat]', e); } }, 30_000);
+  if (assignTimer) clearInterval(assignTimer);
+  assignTimer = setInterval(() => {
+    try {
+      if (readConfig().autoAssign !== false) assigner.tick();
+    } catch (e) { console.error('[auto-assign]', e); }
+  }, 10_000);
 }
 
 /** Wall-clock instant we last observed the machine suspend or lock, so a resume
