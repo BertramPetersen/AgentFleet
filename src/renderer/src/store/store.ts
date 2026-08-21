@@ -150,7 +150,7 @@ interface State {
   /** Which project the workspace is scoped to; null means every project. */
   activeProjectId: string | null;
   /** Which view the main area shows when no inspector is open. */
-  mainView: 'fleet' | 'backlog';
+  mainView: 'fleet' | 'backlog' | 'needs';
   feeds: Record<string, string[]>;
   addAgentOpen: boolean;
   fullscreenAgentId: string | null;
@@ -279,7 +279,7 @@ interface State {
   openInspector: (id: string) => void;
   closeInspector: () => void;
   setActiveProject: (id: string | null) => void;
-  setMainView: (view: 'fleet' | 'backlog') => void;
+  setMainView: (view: 'fleet' | 'backlog' | 'needs') => void;
   setFullscreenFile: (path: string | null, view?: 'edit' | 'preview') => void;
   /** Open/close the IDE. `agentId` names the agent whose workspace it should
    *  show; omit it only when the caller truly has no specific agent (the IDE
