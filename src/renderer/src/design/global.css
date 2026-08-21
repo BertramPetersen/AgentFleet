@@ -201,3 +201,19 @@ canvas, img, svg { image-rendering: pixelated; image-rendering: crisp-edges; }
   background: var(--cth-cream-200); box-shadow: inset 0 0 0 1px var(--cth-ink-100);
   color: var(--cth-ink-500); border-radius: 2px;
 }
+
+/* ── Display face weight ────────────────────────────────────────────────────
+   Every heading, panel title, badge and label opts into the display face by
+   writing `fontFamily: 'var(--cth-font-display)'` in an inline style — 126 call
+   sites across 40 files. Press Start 2P carried its own presence; Inter needs
+   weight and tracking to read as a heading instead of as body text.
+
+   Matching on the inline style itself supplies that to every one of those sites
+   at once, with no edit and no new component API. Inline styles still win for
+   any property they actually set, so a component that sets its own fontWeight
+   keeps it. When a component is rewritten onto real heading semantics it simply
+   stops matching this rule. */
+[style*="cth-font-display"] {
+  font-weight: 640;
+  letter-spacing: 0.005em;
+}

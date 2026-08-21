@@ -25,6 +25,7 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { lightSurfaces } from '@/design/surfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (self as any).MonacoEnvironment = {
@@ -59,31 +60,32 @@ function defineThemes(m: typeof monaco): void {
     base: 'vs',
     inherit: true,
     rules: [
-      { token: '', foreground: '1A1320', background: 'FCFAF0' },
-      { token: 'comment', foreground: '6B5878', fontStyle: 'italic' },
+      { token: '', foreground: '15181D', background: 'FFFFFF' },
+      { token: 'comment', foreground: '6C7480', fontStyle: 'italic' },
       { token: 'keyword', foreground: '8B5CF6' },
       { token: 'string', foreground: '3FA45B' },
       { token: 'number', foreground: 'D94F4F' },
       { token: 'type', foreground: '2A9D94' },
       { token: 'function', foreground: 'C2603A' },
-      { token: 'variable', foreground: '1A1320' },
-      { token: 'delimiter', foreground: '6B5878' }
+      { token: 'variable', foreground: '15181D' },
+      { token: 'delimiter', foreground: '6C7480' }
     ],
     colors: {
-      'editor.background': '#FCFAF0',
-      'editor.foreground': '#1A1320',
-      'editorLineNumber.foreground': '#A899B5',
-      'editorLineNumber.activeForeground': '#3D2E4A',
-      'editor.selectionBackground': '#FFEC99',
-      'editor.lineHighlightBackground': '#FFF8E7',
-      'editorCursor.foreground': '#FF6B6B',
-      'editorGutter.background': '#F0EAD2',
-      'editorWidget.background': '#FFF8E7',
-      'editorIndentGuide.background1': '#E8D9A0',
-      'diffEditor.insertedTextBackground': '#6BCF7F33',
-      'diffEditor.removedTextBackground': '#FF6B6B33',
-      'diffEditor.insertedLineBackground': '#6BCF7F22',
-      'diffEditor.removedLineBackground': '#FF6B6B22'
+      'editor.background': lightSurfaces.bg,
+      'editor.foreground': lightSurfaces.fg,
+      'editorLineNumber.foreground': lightSurfaces.fgFaint,
+      'editorLineNumber.activeForeground': lightSurfaces.fgDim,
+      'editor.selectionBackground': lightSurfaces.selection,
+      'editor.lineHighlightBackground': lightSurfaces.bgAlt,
+      'editorCursor.foreground': lightSurfaces.cursor,
+      'editorGutter.background': lightSurfaces.bgAlt,
+      'editorWidget.background': lightSurfaces.bgAlt,
+      'editorIndentGuide.background1': lightSurfaces.divider,
+      // Diff washes: the recalibrated mint/coral, not the arcade originals.
+      'diffEditor.insertedTextBackground': '#5CA97A33',
+      'diffEditor.removedTextBackground': '#D96A6233',
+      'diffEditor.insertedLineBackground': '#5CA97A22',
+      'diffEditor.removedLineBackground': '#D96A6222'
     }
   });
 }

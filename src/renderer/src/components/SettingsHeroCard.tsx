@@ -69,7 +69,7 @@ export function SettingsHeroCard() {
             <span style={{
               fontFamily: 'var(--cth-font-display)', fontSize: 13, lineHeight: '20px',
               color: 'var(--cth-ink-900)'
-            }}>MUNDER DIFFLIN</span>
+            }}>AGENTFLEET</span>
             {version && (
               <span style={{
                 fontFamily: 'var(--cth-font-mono, monospace)', fontSize: 12,

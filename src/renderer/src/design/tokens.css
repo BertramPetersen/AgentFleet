@@ -1,19 +1,22 @@
 /* Design tokens — mirrors tokens.ts. Update both together. */
 :root {
-  /* Base */
-  --cth-cream-50:  #FFFDF5;
-  --cth-cream-100: #FFF8E7;
-  --cth-cream-200: #F4E9C7;
-  --cth-cream-300: #E8D9A0;
-  --cth-paper-100: #FCFAF0;
-  --cth-paper-200: #F0EAD2;
+  /* Base — AgentFleet: neutral greys. The parchment ramp (#FFF8E7 …) was the
+     game's warmth and it made every dense table read as a scrapbook page. Names
+     are kept because 126 call sites reference them; only the values moved. */
+  --cth-cream-50:  #F6F7F9;   /* app ground */
+  --cth-cream-100: #FFFFFF;   /* default panel fill */
+  --cth-cream-200: #F0F2F5;   /* inset / alternating row */
+  --cth-cream-300: #E3E6EA;   /* disabled fill */
+  --cth-paper-100: #FFFFFF;   /* cards, inputs, terminals */
+  --cth-paper-200: #F8F9FB;
 
-  /* Ink */
-  --cth-ink-900: #1A1320;
-  --cth-ink-700: #3D2E4A;
-  --cth-ink-500: #6B5878;
-  --cth-ink-300: #A899B5;
-  --cth-ink-100: #D9CFE0;
+  /* Ink — neutral text ramp. ink-300 is structural (borders, ~93 inset rules),
+     so it stays at/above 3:1 on white exactly as the dark theme requires. */
+  --cth-ink-900: #15181D;   /* 16.8:1 on white — primary text */
+  --cth-ink-700: #414852;   /*  9.2:1        — secondary text */
+  --cth-ink-500: #6C7480;   /*  4.9:1        — tertiary / hints */
+  --cth-ink-300: #949BA5;   /*  3.1:1        — BORDERS. keep >= 3.0 */
+  --cth-ink-100: #E4E7EB;   /*  1.3:1        — dividers, meant to recede */
 
   /* Accents — v0.3.4 recalibration: same hues, professional saturation.
      The originals (#FFD93D, #FF6B6B, …) were full-saturation arcade tones that
@@ -49,18 +52,20 @@
   --cth-space-7: 48px;
   --cth-space-8: 64px;
 
-  /* Type — v0.3.4: Press Start 2P stays as the BRAND face for small caps
-     labels; everything the user actually reads is Inter (UI) and JetBrains
-     Mono (code/terminal). Pixelify/VT323 were the main readability drag. */
-  --cth-font-display: "Press Start 2P", monospace;
+  /* Type — AgentFleet drops Press Start 2P. It was the last load-bearing piece
+     of the game aesthetic, and at 8px it was only legible BECAUSE it is a pixel
+     font. Display is now Inter, distinguished from body text by weight and
+     tracking rather than by face (see the [style*="cth-font-display"] rule in
+     global.css, which supplies that weight without touching 126 call sites). */
+  --cth-font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --cth-font-ui:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --cth-font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Type scale — v0.3.4: one step tighter (Inter reads larger than Pixelify
      at equal px, and the controls were oversized) */
-  --cth-text-display-lg: 16px;
-  --cth-text-display-md: 12px;
-  --cth-text-display-sm: 8px;
+  --cth-text-display-lg: 15px;
+  --cth-text-display-md: 13px;
+  --cth-text-display-sm: 11px;  /* was 8px — legible only in a pixel font */
   --cth-text-body-lg:    16px;
   --cth-text-body-md:    14px;
   --cth-text-body-sm:    13px;
@@ -68,16 +73,17 @@
   --cth-text-mono-sm:    13px;
 
   /* Line heights — integer multiples */
-  --cth-lh-display-lg: 24px;
-  --cth-lh-display-md: 20px;
-  --cth-lh-display-sm: 12px;
+  --cth-lh-display-lg: 22px;
+  --cth-lh-display-md: 18px;
+  --cth-lh-display-sm: 15px;
   --cth-lh-body-lg:    24px;
   --cth-lh-body-md:    20px;
   --cth-lh-body-sm:    18px;
   --cth-lh-mono:       20px;
 
-  /* Hard drop shadow — no blur, softer than before */
-  --cth-shadow-hard: 3px 3px 0 rgba(26, 19, 32, 0.14);
+  /* Elevation. The blur-free 3px offset was the SNES panel look; a tool wants
+     depth you don't notice. Token name kept for its ~30 call sites. */
+  --cth-shadow-hard: 0 1px 2px rgba(21, 24, 29, 0.06), 0 4px 12px -2px rgba(21, 24, 29, 0.10);
 
   /* Panel borders — v0.3.4: single hairlines. The old three-layer package
      boxed every surface in thick chrome; structure now comes from surface
@@ -123,19 +129,19 @@
 :root[data-cth-theme='dark'] {
   /* Base surfaces — a graded elevation ramp, darkest where light mode was
      lightest. Neutral with a whisper of the brand's violet warmth. */
-  --cth-cream-50:  #17171B;   /* app ground — dark, deliberately NOT black */
-  --cth-cream-100: #1D1D22;
-  --cth-cream-200: #26262C;
-  --cth-cream-300: #313139;
-  --cth-paper-100: #1A1A1F;   /* cards, inputs, terminals */
-  --cth-paper-200: #222229;
+  --cth-cream-50:  #14161A;   /* app ground — dark, deliberately NOT black */
+  --cth-cream-100: #1A1D22;
+  --cth-cream-200: #23272E;
+  --cth-cream-300: #2E333B;
+  --cth-paper-100: #171A1F;   /* cards, inputs, terminals */
+  --cth-paper-200: #1F232A;
 
   /* Ink → off-white text ramp (never #FFF — glare) */
-  --cth-ink-900: #DEDBD6;   /* 10.9-13.0:1 — primary text, warm off-white */
-  --cth-ink-700: #B3B0AC;   /*  7.0-8.3:1  — secondary text */
-  --cth-ink-500: #96919F;   /*  4.9-5.8:1  — tertiary / hints */
-  --cth-ink-300: #787684;   /*  3.4-4.0:1  — BORDERS. must stay >= 3.0 */
-  --cth-ink-100: #3E3D46;   /*  1.4-1.7:1  — dividers, meant to recede */
+  --cth-ink-900: #DCDFE4;   /* primary text — neutral off-white, never #FFF */
+  --cth-ink-700: #ACB2BB;   /* secondary text */
+  --cth-ink-500: #8B929C;   /* tertiary / hints */
+  --cth-ink-300: #6E757F;   /* BORDERS. must stay >= 3.0 on the ground */
+  --cth-ink-100: #333941;   /* dividers, meant to recede */
 
   /* Accents — one step lighter/softer than the light set so they read on dark
      without fluorescing */
@@ -166,6 +172,6 @@
   --cth-status-looping:    #D69A55;
   --cth-status-typing:     #CBA24A;
 
-  /* Hard shadow reads as depth, not void */
-  --cth-shadow-hard: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  /* Elevation on dark: lift the surface, don't stamp a shadow next to it. */
+  --cth-shadow-hard: 0 1px 2px rgba(0, 0, 0, 0.40), 0 6px 16px -4px rgba(0, 0, 0, 0.55);
 }
