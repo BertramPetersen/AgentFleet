@@ -1100,6 +1100,7 @@ export class HiveManager {
     // Native-separator path helpers — see the 🪟 note above.
     const inDir = (...parts: string[]): string => join(dir, ...parts);
     const inRoot = (...parts: string[]): string => join(root, ...parts);
+    const canvasLine = 'Visual artifacts: to SHOW the human something — a mockup, a diagram, a report, a before/after — write a SELF-CONTAINED HTML file into the .canvas/ folder in your working directory (create it if missing; several files are fine; relative assets next to the file work). The harness renders it live in its Canvas view and re-renders on every save, so iterate by editing the same file. Never open a browser for this.';
     const memoryLine = semanticMemory
       // The palace location is named, not spelled as `$MEMPALACE_PALACE_PATH`:
       // `mempalace` reads that env var itself, and the POSIX `$` form was noise
@@ -1137,6 +1138,7 @@ export class HiveManager {
       guardrailsLine,
       memoryLine,
       knowledgeLine,
+      canvasLine,
       godLine,
       slackLine,
       `Env vars available to you: AGENT_ID, AGENT_NAME, HIVE_ROOT, AGENT_DIR.`

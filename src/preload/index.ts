@@ -1047,6 +1047,8 @@ const api = {
   // ─── Projects (AgentFleet — hive/projects.json) ─────────────────────────────
   projectsList: (): Promise<Project[]> => ipcRenderer.invoke('projects:list'),
   projectsSpend: (): Promise<Record<string, number>> => ipcRenderer.invoke('projects:spend'),
+  canvasInfo: (): Promise<{ port: number; token: string }> => ipcRenderer.invoke('canvas:info'),
+  canvasList: (): Promise<{ agentId: string; file: string; mtimeMs: number; size: number }[]> => ipcRenderer.invoke('canvas:list'),
   projectsUpsert: (project: Project): Promise<{ ok: true; project: Project } | { ok: false; error: string }> =>
     ipcRenderer.invoke('projects:upsert', project),
   projectsSetArchived: (id: string, archived: boolean): Promise<{ ok: boolean; error?: string }> =>

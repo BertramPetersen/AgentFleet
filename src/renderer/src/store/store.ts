@@ -150,7 +150,7 @@ interface State {
   /** Which project the workspace is scoped to; null means every project. */
   activeProjectId: string | null;
   /** Which view the main area shows when no inspector is open. */
-  mainView: 'fleet' | 'backlog' | 'needs';
+  mainView: 'fleet' | 'backlog' | 'needs' | 'canvas';
   feeds: Record<string, string[]>;
   addAgentOpen: boolean;
   fullscreenAgentId: string | null;
@@ -261,7 +261,7 @@ interface State {
   openInspector: (id: string) => void;
   closeInspector: () => void;
   setActiveProject: (id: string | null) => void;
-  setMainView: (view: 'fleet' | 'backlog' | 'needs') => void;
+  setMainView: (view: 'fleet' | 'backlog' | 'needs' | 'canvas') => void;
   setFullscreenFile: (path: string | null, view?: 'edit' | 'preview') => void;
   setSidebarWidth: (px: number) => void;
   setSidebarTab: (tab: SidebarTab) => void;
