@@ -34,7 +34,7 @@ import {
 } from '@/store/config';
 import { canReceiveInbox } from '@shared/agentProvider';
 
-/** Michael's control surface. Shown instead of the plain terminal/files panel
+/** the orchestrator's control surface. Shown instead of the plain terminal/files panel
  *  when the god agent is selected: terminal + queue, the floor roster (with
  *  per-agent model + dispatch + assistant access), a memory view, and a live
  *  activity feed / board / usage meter. */
@@ -153,22 +153,17 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '6px 8px', background: 'var(--cth-cream-100)',
-        borderBottom: '1px solid var(--cth-ink-700)', flexShrink: 0
+        borderBottom: '1px solid var(--cth-ink-100)', flexShrink: 0
       }}>
-        <div style={{
-          width: 32, height: 32, background: `var(--cth-${agent.accent}-light)`,
-          boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', flexShrink: 0
-        }}>
-          <AgentAvatar name={agent.name} accent={agent.accent} scale={1} />
-        </div>
+        <AgentAvatar name={agent.name} accent={agent.accent} scale={1.25} />
         {/* Title + subtitle truncate; the control cluster never shrinks. At
             sidebar width the old header wrapped its 24-char display-font title
             onto three lines and "runs the floor" word-per-line under the two
             wide buttons — everything here is single-line by construction. */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: 'var(--cth-font-display)', fontSize: 10, lineHeight: '14px', color: 'var(--cth-ink-900)',
+            fontFamily: 'var(--cth-font-display)', fontSize: 'var(--cth-text-display-sm)',
+            lineHeight: '14px', letterSpacing: '0.12em', color: 'var(--cth-ink-500)',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
           }}>COMMAND CENTER</div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 1, minWidth: 0 }}>
@@ -176,7 +171,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             <span style={{
               fontSize: 12, color: 'var(--cth-ink-500)',
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-            }}>Michael runs the floor</span>
+            }}>{agent.name} runs the fleet</span>
           </div>
         </div>
         {/* v0.3.4: floor-wide auto-delivery lives HERE (one switch for every
@@ -191,7 +186,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             <span
               title={floorDeliveryPaused
                 ? 'Automatic queue delivery is PAUSED for every agent — messages stay queued until resumed'
-                : 'Automatic queue delivery is ON for every agent — click to pause the whole floor'}
+                : 'Automatic queue delivery is ON for every agent — click to pause the whole fleet'}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
             >
               <Icon name={floorDeliveryPaused ? 'pause' : 'play'} />
@@ -236,7 +231,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
         flexWrap: fullscreen ? 'nowrap' : 'wrap',
         overflowX: fullscreen ? 'auto' : 'visible',
         padding: '6px 8px', background: 'var(--cth-cream-100)',
-        borderBottom: '1px solid var(--cth-ink-700)', flexShrink: 0
+        borderBottom: '1px solid var(--cth-ink-100)', flexShrink: 0
       }}>
         {visibleTabs.map((t) => (
           <button
@@ -294,7 +289,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
               <MessageQueueComposer agent={agent} />
             </>
           ) : (
-            <Centered>Michael has no live terminal.</Centered>
+            <Centered>The orchestrator has no live terminal.</Centered>
           )
         )}
         {tab === 'floor' && <FloorTab seed={dispatchSeed} />}
@@ -339,11 +334,11 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
   const [engineProvider, setEngineProvider] = useState<AgentProvider>('claude');
   const [engineModel, setEngineModel] = useState<string | undefined>(undefined);
   const [restartErrors, setRestartErrors] = useState<Record<string, string>>({});
-  // The harness's own default model (Settings → default model). Michael and every
+  // The harness's own default model (Settings → default model). The orchestrator and every
   // new agent spawn on this, so the picker marks it — otherwise the only entry
   // reading "default" was the CLI's, which is a different thing entirely.
   const [defaultModel, setDefaultModel] = useState<string | undefined>(undefined);
-  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = Michael decides
+  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = the orchestrator decides
   const [dispatchText, setDispatchText] = useState('');
   const [dispatchMsg, setDispatchMsg] = useState<string | null>(null);
   // ── ISSUES section state ──
@@ -464,7 +459,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
       const hive = a.isGod
         ? { id: a.id, name: a.name, cwd: a.cwd, provider, isGod: true, role: 'orchestrator (god)' }
         : a.isAssistant
-        ? { id: a.id, name: a.name, cwd: a.cwd, provider, isAssistant: true, role: "Michael's prep assistant" }
+        ? { id: a.id, name: a.name, cwd: a.cwd, provider, isAssistant: true, role: "the orchestrator's prep assistant" }
         : { id: a.id, name: a.name, cwd: a.cwd, provider, role: a.description };
       const res = await window.cth.spawnPty({
         id: a.ptyId,
@@ -536,7 +531,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
     );
     setDispatchText('');
     setDispatchMsg(res.ok
-      ? `sent to Michael${suggested ? ` (suggesting ${suggested.name})` : ''}`
+      ? `sent to the orchestrator${suggested ? ` (suggesting ${suggested.name})` : ''}`
       : `failed: ${res.error ?? '?'}`);
     setTimeout(() => setDispatchMsg(null), 4000);
   };
@@ -565,7 +560,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
   const assignIssue = (issue: GHIssue) => {
     const body = (issue.body ?? '').slice(0, 200);
     setDispatchText(`GitHub Issue #${issue.number}: ${issue.title}\n\n${body}\n\nURL: ${issue.url}`);
-    setDispatchTo(''); // Michael decomposes and assigns — no more broadcast blasts
+    setDispatchTo(''); // the orchestrator decomposes and assigns — no more broadcast blasts
   };
 
   // Set/clear one agent's token limit; persist the whole map (writeConfig replaces
@@ -603,7 +598,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
             SUGGESTED OWNER
           </span>
           <Select value={dispatchTo} onChange={setDispatchTo}>
-            <option value="">Michael decides</option>
+            <option value="">Orchestrator decides</option>
             {agents.filter((a) => !a.isGod).map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
@@ -613,7 +608,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
           value={dispatchText}
           onChange={(e) => setDispatchText(e.target.value)}
           rows={2}
-          placeholder="Describe the task… (Michael decomposes, writes the card, and assigns)"
+          placeholder="Describe the task… (the orchestrator decomposes, writes the card, and assigns)"
           style={textareaStyle}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
@@ -844,7 +839,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
                   onClick={async () => {
                     const currentProvider = inferAgentProvider(a.command, a.provider);
                     if (engineProvider !== currentProvider) {
-                      if (!window.confirm("This restarts Michael; a conversation on a different engine can't be resumed.")) return;
+                      if (!window.confirm("This restarts the orchestrator; a conversation on a different engine can't be resumed.")) return;
                     }
                     await window.cth.updateConfig({ godProvider: engineProvider, godModel: engineModel });
                     await restartWithModel(a, engineModel, { provider: engineProvider, resume: false });
@@ -860,7 +855,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
                   disabled={restarting === a.id}
                   onClick={() => restartWithModel(a, a.model, { resume: true })}
                 >
-                  <span title="Kill and respawn Michael, resuming the current conversation — fixes a corrupted/garbled terminal without losing context">
+                  <span title="Kill and respawn the orchestrator, resuming the current conversation — fixes a corrupted/garbled terminal without losing context">
                     restart &amp; continue
                   </span>
                 </PixelButton>
@@ -1146,8 +1141,10 @@ function TokenLimitEditor({ value, onSet }: { value?: number; onSet: (tokens: nu
         style={{
           flexShrink: 0, padding: '1px 6px', border: 'none', cursor: 'pointer',
           background: value && value > 0 ? 'var(--cth-lemon)' : 'var(--cth-cream-200)',
-          boxShadow: `inset 0 0 0 1px ${value && value > 0 ? 'var(--cth-ink-900)' : 'var(--cth-ink-700)'}`,
-          fontFamily: 'var(--cth-font-ui)', fontSize: 11, color: 'var(--cth-ink-900)'
+          borderRadius: 'var(--cth-radius-xs)',
+          boxShadow: `inset 0 0 0 1px ${value && value > 0 ? 'var(--cth-lemon)' : 'var(--cth-ink-300)'}`,
+          fontFamily: 'var(--cth-font-ui)', fontSize: 11,
+          color: value && value > 0 ? 'var(--cth-on-accent)' : 'var(--cth-ink-900)'
         }}
       >{value && value > 0
         ? <>limit <span style={{ fontFamily: 'var(--cth-font-mono)' }}>{fmtTokens(value)}</span></>
@@ -1173,7 +1170,7 @@ function TokenLimitEditor({ value, onSet }: { value?: number; onSet: (tokens: nu
       />
       <button
         onMouseDown={(e) => e.preventDefault()} onClick={commit} title="Save limit"
-        style={{ flexShrink: 0, padding: '1px 5px', border: 'none', cursor: 'pointer', background: 'var(--cth-mint)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', fontSize: 11, color: 'var(--cth-ink-900)' }}
+        style={{ flexShrink: 0, padding: '1px 5px', border: 'none', cursor: 'pointer', background: 'var(--cth-mint)', borderRadius: 'var(--cth-radius-xs)', boxShadow: 'none', fontSize: 11, color: 'var(--cth-on-accent)' }}
       >✓</button>
     </span>
   );

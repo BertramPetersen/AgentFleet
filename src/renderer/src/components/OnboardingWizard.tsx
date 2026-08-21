@@ -37,7 +37,7 @@ const FEATURES: Feature[] = [
     icon: 'gear',
     label: 'MICHAEL IS YOUR CLONE',
     desc: 'Your clone runs the floor — triages requests, routes tasks, and escalates only what needs you.',
-    descPlain: 'Your clone, Michael, takes your requests, hands work to the right agent, and only interrupts you when it matters.',
+    descPlain: 'Your clone — the Orchestrator — takes your requests, hands work to the right agent, and only interrupts you when it matters.',
     tint: 'var(--cth-sky-light)', edge: 'var(--cth-sky)'
   },
   {
@@ -186,9 +186,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      background: 'var(--cth-cream-200)',
-      backgroundImage:
-        `repeating-linear-gradient(45deg, rgba(232, 217, 160, 0.4) 0 1px, transparent 1px 8px)`,
+      background: 'var(--cth-cream-50)',
       // Scroll the overlay rather than clip the wizard. Step 2 lists every
       // installed CLI engine (8 rows + a model select), which is taller than a
       // 1080p-class window once the OS chrome is subtracted — the panel was
@@ -227,7 +225,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     boxShadow: 'inset 0 0 0 1.5px var(--cth-ink-500)',
                     display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden'
                   }}>
-                    <AgentAvatar name="Michael" accent="lemon" scale={2} />
+                    <AgentAvatar name="Orchestrator" accent="lemon" scale={2} />
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--cth-font-display)', fontSize: 12, lineHeight: '18px' }}>
@@ -274,7 +272,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     boxShadow: 'inset 0 0 0 1.5px var(--cth-ink-500)',
                     display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden'
                   }}>
-                    <AgentAvatar name="Michael" accent="lemon" scale={2} />
+                    <AgentAvatar name="Orchestrator" accent="lemon" scale={2} />
                   </div>
                   <div>
                     <div style={{
@@ -367,11 +365,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               <>
                 <p style={{ margin: 0, lineHeight: '22px' }}>
                   {plain ? (
-                    <><strong>Michael is your clone</strong> — he reads your requests, breaks
+                    <><strong>The Orchestrator is your clone</strong> — it reads your requests, breaks
                     them into tasks, and hands them to the right agent. He's the boss of the
                     floor; you're still the boss of him. Choose which AI engine powers him.</>
                   ) : (
-                    <><strong>Michael is your clone</strong> — the boss of the floor you just
+                    <><strong>The Orchestrator is your clone</strong> — the lead of the fleet you just
                     met. He triages your requests, assigns tasks, and manages the team, while
                     escalating anything that genuinely needs you. Pick the engine and model that
                     power him; give him a longer-context, higher-capability model.</>
@@ -395,7 +393,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     ) : (
                       <>Each option is a <strong>CLI engine</strong> you have installed (Claude Code,
                       Codex, Antigravity/Gemini, or a local proxy like Qwen).
-                      <strong> Your clone</strong> (Michael) is the engine that orchestrates the whole
+                      <strong> Your clone</strong> (the Orchestrator) is the engine that orchestrates the whole
                       hive. Recommended: Claude Code · Opus 4.8 · 1M — other providers can be wired
                       per agent later.</>
                     )}
@@ -445,8 +443,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         {p.id === 'claude' && (
                           <span style={{
                             fontSize: 10, padding: '1px 5px', lineHeight: '16px',
-                            background: 'var(--cth-lemon)',
-                            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+                            background: 'var(--cth-lemon)', color: 'var(--cth-on-accent)',
+                            borderRadius: 'var(--cth-radius-xs)',
                             fontFamily: 'var(--cth-font-display)', flexShrink: 0
                           }}>RECOMMENDED</span>
                         )}
@@ -466,7 +464,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     ))}
                   </select>
                   <div style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>
-                    This only sets Michael's engine. You can run other providers per agent later.
+                    This only sets the Orchestrator's engine. You can run other providers per agent later.
                   </div>
                 </div>
               </>

@@ -1,11 +1,11 @@
 import { PixelPanel } from '@/components/PixelPanel';
 
 /**
- * Loader shown on the empty floor while the god agent ("Michael") is clocking
+ * Loader shown on the empty fleet while the orchestrator (the god agent) is
  * in on launch. Replaces the "add agent" prompt so a returning user doesn't see
- * the empty-floor call-to-action before Michael has booted.
+ * the empty-floor call-to-action before the orchestrator has booted.
  */
-export function MichaelBooting() {
+export function OrchestratorBooting() {
   return (
     <div style={{
       position: 'absolute', inset: 0,
@@ -37,7 +37,7 @@ export function MichaelBooting() {
               margin: 0, fontSize: 13, lineHeight: '20px', textAlign: 'center',
               color: 'var(--cth-ink-700)'
             }}>
-              Michael is settling into the corner office and getting the floor
+              The orchestrator is booting and getting the fleet
               ready. Hang tight…
             </p>
           </div>

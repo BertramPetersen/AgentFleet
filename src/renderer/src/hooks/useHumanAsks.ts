@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { openQuestion, waitsOnHuman, type HiveTask } from '@/components/TasksKanban';
-import type { ProjectTask } from '@/store/projects';
+import { parseTasks, type ProjectTask } from '@/store/projects';
 
 /**
  * The one implementation of "the human owes this card an answer".
@@ -73,13 +73,6 @@ export interface HumanAsk {
   frozen: ProjectTask[];
 }
 
-function parse(raw: unknown): ProjectTask[] {
-  const list = (raw && typeof raw === 'object' && Array.isArray((raw as { tasks?: unknown }).tasks))
-    ? (raw as { tasks: ProjectTask[] }).tasks
-    : [];
-  return list.filter((t): t is ProjectTask => !!t && typeof t === 'object' && typeof t.id === 'string');
-}
-
 /** Everything transitively waiting on `id`, cycle-safe. */
 function dependentsTree(id: string, all: ProjectTask[], seen = new Set<string>()): ProjectTask[] {
   if (seen.has(id)) return [];
@@ -107,7 +100,7 @@ export function useHumanAsks(projectId?: string | null): UseHumanAsks {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async (): Promise<void> => {
-    try { setTasks(parse(await window.cth.hiveTasks())); } catch { /* keep the last good list */ }
+    try { setTasks(parseTasks(await window.cth.hiveTasks())); } catch { /* keep the last good list */ }
   }, []);
 
   // One config read for the whole app, cached at module scope: the flag is the

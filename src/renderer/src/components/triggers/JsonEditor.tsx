@@ -20,7 +20,7 @@ const editorTheme = EditorView.theme({
   },
   '&.cm-focused': { outline: 'none' },
   '.cm-content': { padding: '6px 8px' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--cth-coral)', borderLeftWidth: '2px' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--cth-lemon)', borderLeftWidth: '2px' },
   '.cm-scroller': { fontFamily: 'inherit', lineHeight: '17px' },
   '.cm-gutters': { display: 'none' },
   '.cm-activeLine': { background: 'transparent' },

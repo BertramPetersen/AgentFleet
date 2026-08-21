@@ -70,7 +70,7 @@ export function UpdateBadge() {
         margin: 0,
         background: chipBg,
         border: 'none',
-        borderRadius: 2,
+        borderRadius: 4,
         boxShadow: view.label ? 'inset 0 0 0 1px var(--cth-ink-300)' : 'none',
         fontFamily: 'var(--cth-font-ui)',
         fontSize: 13,

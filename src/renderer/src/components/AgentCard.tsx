@@ -3,7 +3,7 @@ import { PixelPanel } from './PixelPanel';
 import { PixelBadge, StatusKind } from './PixelBadge';
 import { useHasTerminalDraft } from './terminalPool';
 import { AgentAvatar } from './AgentAvatar';
-import { RealtimeMichaelToggle } from './RealtimeMichaelToggle';
+import { RealtimeVoiceToggle } from './RealtimeVoiceToggle';
 import { CostHud } from '@/realtime/CostHud';
 import { AccentColorName } from '@/design/tokens';
 
@@ -56,7 +56,7 @@ export function AgentCard({
   const [hover, setHover] = useState(false);
   const typing = useHasTerminalDraft(ptyId);
   // IDENTITY and SELECTION are two different things, and conflating them is why
-  // selecting Michael appeared to do nothing.
+  // selecting the orchestrator appeared to do nothing.
   //
   // The card used to pass `isGod || selected` into PixelPanel's 'active' variant,
   // whose frame is `inset 1px + 3px accent + 5px ink` — five pixels of border in
@@ -107,12 +107,10 @@ export function AgentCard({
   const godSurface: React.CSSProperties = isGod
     ? {
         background: `var(--cth-${accent}-light)`,
-        boxShadow: `inset 0 0 0 1px var(--cth-${accent})`
+        boxShadow: 'inset 0 0 0 1px var(--cth-status-working-bd)'
       }
     : {};
-  const dropShadow = isGod
-    ? `2px 3px 0 0 rgba(26,19,32,${hover ? 0.2 : 0.14})`
-    : (hover ? '1px 2px 0 0 rgba(26,19,32,0.12)' : 'none');
+  const dropShadow = hover ? '0 4px 10px -4px rgba(0,0,0,0.5)' : 'none';
   // Ring first so it sits tight to the card, then the existing drop shadow.
   const outerShadow = [selectionRing, dropShadow === 'none' ? '' : dropShadow]
     .filter(Boolean).join(', ') || 'none';
@@ -137,7 +135,7 @@ export function AgentCard({
         position: 'relative',
         transform: lift ? `translateY(${lift}px)` : 'none',
         boxShadow: outerShadow,
-        transition: 'transform 90ms steps(2, end), box-shadow 90ms steps(2, end)'
+        transition: 'transform 90ms ease, box-shadow 90ms ease'
       }}
     >
       {/* The taken note, stuck to the card like on the desk: this worker is
@@ -150,10 +148,11 @@ export function AgentCard({
             position: 'absolute', right: -4, bottom: -5, zIndex: 2,
             width: 20, height: 18,
             background: 'var(--cth-sky)',
-            boxShadow: 'inset 0 0 0 1px var(--cth-ink-300), 1px 2px 0 rgba(26,19,32,0.18)',
+            borderRadius: 'var(--cth-radius-xs)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.35)',
             transform: 'rotate(4deg)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-ink-900)',
+            fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-on-accent)',
             cursor: 'pointer'
           }}
         >
@@ -166,19 +165,7 @@ export function AgentCard({
         noPadding
       >
         <div style={{ display: 'flex', gap: 8, height: '100%' }}>
-          {/* Portrait tile — vertically centred so the card reads calm and even. */}
-          <div style={{
-            width: 36, height: isGod ? 50 : 46, alignSelf: 'center',
-            // God's CARD is now accent-light, so the tile cannot be — it would
-            // vanish into its own background. Paper reads as an inset frame
-            // against the tint, which is what the tile is meant to look like.
-            background: isGod ? 'var(--cth-paper-100)' : `var(--cth-${accent}-light)`,
-            boxShadow: `inset 0 0 0 1px var(--cth-ink-${isGod ? '300' : '100'})`,
-            // Anchor the sprite's TOP: the 56px-tall portrait overflows this
-            // tile, and bottom-anchoring cropped the head — crop feet, not face.
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'hidden',
-            flexShrink: 0
-          }}>
+          <div style={{ alignSelf: 'center', flexShrink: 0 }}>
             <AgentAvatar name={name} accent={accent} scale={1.5} />
           </div>
 
@@ -194,13 +181,6 @@ export function AgentCard({
                   flex: 1, minWidth: 0,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                 }}>{name.toUpperCase()}</span>
-                {isGod && (
-                  <span style={{
-                    fontFamily: 'var(--cth-font-display)', fontSize: 7, lineHeight: '11px',
-                    background: `var(--cth-${accent})`, color: 'var(--cth-ink-900)',
-                    padding: '1px 4px 0', flexShrink: 0
-                  }}>BOSS</span>
-                )}
               </span>
               {/* flexShrink:0 — the badge is a fixed 2-to-5 character chip; when
                   it was allowed to shrink, the browser resolved the overflow by
@@ -234,7 +214,7 @@ export function AgentCard({
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <RealtimeMichaelToggle />
+                <RealtimeVoiceToggle />
                 <CostHud compact />
               </div>
             ) : (
@@ -278,11 +258,11 @@ export function AgentCard({
             <div style={{ marginTop: 'auto' }} title={gaugeTitle}>
               <div style={{
                 height: 4, width: '100%',
-                background: 'var(--cth-cream-200)',
-                boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+                background: 'var(--cth-cream-300)',
+                borderRadius: 2,
                 overflow: 'hidden'
               }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: gaugeColor }} />
+                <div style={{ width: `${pct}%`, height: '100%', background: gaugeColor, borderRadius: 2 }} />
               </div>
             </div>
           </div>

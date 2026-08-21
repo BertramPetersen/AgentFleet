@@ -54,7 +54,7 @@ Then read `.run-shots/01-shell.png`.
 | `launch` | launch the app, wait for React to replace the splash |
 | `ss [name]` | screenshot → `.run-shots/<name>.png` |
 | `text [sel]` | print `innerText` of a selector, or the whole body |
-| `click <sel>` / `click-text <text>` | click via DOM (not coordinates) |
+| `click <sel>` / `click-text <text>` | click via DOM (not coordinates). Matches buttons/links first, then any text leaf whose nearest `cursor: pointer` ancestor is clickable — so backlog rows and cards work too |
 | `wait <sel>` | wait up to 15s for a selector |
 | `eval <js>` | evaluate in the renderer, print JSON |
 | `agents` | list rendered `[data-agent-id]` rows |

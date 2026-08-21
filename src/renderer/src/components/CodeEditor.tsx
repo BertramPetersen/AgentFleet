@@ -12,46 +12,46 @@ import { css } from '@codemirror/lang-css';
 import { yaml } from '@codemirror/lang-yaml';
 import { Icon } from './Icon';
 import { PixelButton } from './PixelButton';
-import { lightSurfaces } from '@/design/surfaces';
+import { surfaces } from '@/design/surfaces';
 
 // Surfaces come from design/surfaces (one restatement for every canvas editor);
 // only the syntax hues below are CodeMirror's own.
 const cthEditorTheme = EditorView.theme({
   '&': {
-    background: lightSurfaces.bg,
-    color: lightSurfaces.fg,
+    background: surfaces.bg,
+    color: surfaces.fg,
     height: '100%',
     fontFamily: '"JetBrains Mono", ui-monospace, Menlo, monospace',
     fontSize: '13px'
   },
-  '.cm-content': { caretColor: lightSurfaces.cursor, padding: '8px 0' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: lightSurfaces.cursor, borderLeftWidth: '2px' },
+  '.cm-content': { caretColor: surfaces.cursor, padding: '8px 0' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: surfaces.cursor, borderLeftWidth: '2px' },
   '.cm-scroller': { fontFamily: 'inherit', overflow: 'auto' },
   '.cm-gutters': {
-    background: lightSurfaces.bgAlt,
-    color: lightSurfaces.fgFaint,
-    borderRight: `1px solid ${lightSurfaces.divider}`
+    background: surfaces.bgAlt,
+    color: surfaces.fgFaint,
+    borderRight: `1px solid ${surfaces.divider}`
   },
-  '.cm-activeLineGutter': { background: lightSurfaces.activeLine },
-  '.cm-activeLine': { background: lightSurfaces.activeLine },
-  '.cm-selectionBackground, ::selection': { background: `${lightSurfaces.selection} !important` },
-  '.cm-searchMatch': { background: '#CFE5E9', outline: `1px solid ${lightSurfaces.border}` },
-  '.cm-searchMatch.cm-searchMatch-selected': { background: '#F3E4BC' }
-}, { dark: false });
+  '.cm-activeLineGutter': { background: surfaces.activeLine },
+  '.cm-activeLine': { background: surfaces.activeLine },
+  '.cm-selectionBackground, ::selection': { background: `${surfaces.selection} !important` },
+  '.cm-searchMatch': { background: '#243B2E', outline: `1px solid ${surfaces.border}` },
+  '.cm-searchMatch.cm-searchMatch-selected': { background: '#4D4419' }
+}, { dark: true });
 
 const cthSyntax = HighlightStyle.define([
-  { tag: tags.keyword,        color: '#B197FC' },
-  { tag: tags.operator,       color: '#6B5878' },
-  { tag: [tags.string, tags.regexp], color: '#6BCF7F' },
-  { tag: [tags.number, tags.bool, tags.null], color: '#FF6B6B' },
-  { tag: tags.comment,        color: '#6B5878', fontStyle: 'italic' },
-  { tag: tags.variableName,   color: '#1A1320' },
-  { tag: tags.function(tags.variableName), color: '#FFA07A' },
+  { tag: tags.keyword,        color: '#9B7EDE' },
+  { tag: tags.operator,       color: '#6D7A89' },
+  { tag: [tags.string, tags.regexp], color: '#5FC98A' },
+  { tag: [tags.number, tags.bool, tags.null], color: '#FF8A8A' },
+  { tag: tags.comment,        color: '#6D7A89', fontStyle: 'italic' },
+  { tag: tags.variableName,   color: '#E7EBF0' },
+  { tag: tags.function(tags.variableName), color: '#FFB84D' },
   { tag: [tags.typeName, tags.className], color: '#4ECDC4' },
-  { tag: tags.propertyName,   color: '#3D2E4A' },
-  { tag: tags.heading,        color: '#1A1320', fontWeight: 'bold' as any },
-  { tag: tags.link,           color: '#4ECDC4', textDecoration: 'underline' as any },
-  { tag: tags.meta,           color: '#6B5878' }
+  { tag: tags.propertyName,   color: '#95A2B3' },
+  { tag: tags.heading,        color: '#E7EBF0', fontWeight: 'bold' as any },
+  { tag: tags.link,           color: '#6C8EF5', textDecoration: 'underline' as any },
+  { tag: tags.meta,           color: '#6D7A89' }
 ]);
 
 function extensionsFor(filename: string) {
@@ -186,7 +186,7 @@ export function CodeEditor({
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '4px 8px',
         background: 'var(--cth-cream-200)',
-        borderBottom: '1px solid var(--cth-ink-700)',
+        borderBottom: '1px solid var(--cth-ink-100)',
         fontFamily: 'var(--cth-font-ui)', fontSize: 12,
         color: 'var(--cth-ink-700)'
       }}>
@@ -246,7 +246,7 @@ export function CodeEditor({
       {/* Footer actions when fullscreen */}
       {fullscreen && (
         <div style={{
-          padding: 8, borderTop: '1px solid var(--cth-ink-700)',
+          padding: 8, borderTop: '1px solid var(--cth-ink-100)',
           background: 'var(--cth-cream-200)',
           display: 'flex', justifyContent: 'flex-end', gap: 8
         }}>

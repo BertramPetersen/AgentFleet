@@ -26,7 +26,7 @@ const fillByVariant: Record<Variant, string> = {
   inset:    'var(--cth-cream-200)',
   active:   'var(--cth-cream-100)',
   terminal: 'var(--cth-paper-100)',
-  dialog:   'var(--cth-cream-50)'
+  dialog:   'var(--cth-cream-200)'
 };
 
 export function PixelPanel({
@@ -41,17 +41,19 @@ export function PixelPanel({
   const baseStyle: CSSProperties = {
     background: fillByVariant[variant],
     boxShadow: borderByVariant[variant],
+    borderRadius: 'var(--cth-radius-md)',
     padding: noPadding ? 0 : 'var(--cth-space-3)',
     position: 'relative',
+    overflow: 'hidden',
     ...style
   };
 
-  // Active variant: paint accent over the middle border slot (3px ring at 1px inset)
+  // Active variant: the mock's selection language — a 2px accent stripe on the
+  // left edge, not a ring around the whole panel.
   if (variant === 'active' && accent) {
     baseStyle.boxShadow = `
       inset 0 0 0 1px var(--cth-ink-100),
-      inset 0 0 0 3px var(--cth-${accent}),
-      inset 0 0 0 5px var(--cth-ink-900)`;
+      inset 3px 0 0 var(--cth-${accent})`;
   }
 
   return (
@@ -60,15 +62,22 @@ export function PixelPanel({
         <div
           style={{
             margin: noPadding ? 0 : '-12px -12px 12px',
-            padding: '6px 12px 4px',
-            background: accent ? `var(--cth-${accent})` : 'var(--cth-cream-200)',
+            padding: '6px 12px 5px',
+            display: 'flex', alignItems: 'center', gap: 7,
+            background: 'var(--cth-cream-200)',
             color: 'var(--cth-ink-900)',
             fontFamily: 'var(--cth-font-display)',
             fontSize: 'var(--cth-text-display-md)',
             lineHeight: 'var(--cth-lh-display-md)',
-            boxShadow: 'inset 0 -1px 0 var(--cth-ink-900)'
+            boxShadow: 'inset 0 -1px 0 var(--cth-ink-100)'
           }}
         >
+          {accent && (
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: `var(--cth-${accent})`, flex: '0 0 7px'
+            }} />
+          )}
           {title}
         </div>
       )}

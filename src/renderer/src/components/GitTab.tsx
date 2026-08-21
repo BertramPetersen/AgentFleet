@@ -109,7 +109,7 @@ export function GitTab({ cwd }: GitTabProps) {
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '6px 10px',
         background: 'var(--cth-cream-200)',
-        borderBottom: '1px solid var(--cth-ink-700)'
+        borderBottom: '1px solid var(--cth-ink-100)'
       }}>
         <span style={{
           fontFamily: 'var(--cth-font-display)', fontSize: 10, lineHeight: '14px',
@@ -168,8 +168,9 @@ export function GitTab({ cwd }: GitTabProps) {
                 <span key={`l-${b}`} style={{
                   padding: '0 6px', fontSize: 12,
                   background: b === branch ? 'var(--cth-lemon)' : 'var(--cth-cream-100)',
+                  borderRadius: 'var(--cth-radius-xs)',
                   boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
-                  color: 'var(--cth-ink-900)'
+                  color: b === branch ? 'var(--cth-on-accent)' : 'var(--cth-ink-900)'
                 }}>{b}</span>
               ))}
               {branches.remote.map(b => (

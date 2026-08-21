@@ -170,7 +170,7 @@ export function TasksKanban() {
           {tasks.length} task{tasks.length === 1 ? '' : 's'}
         </span>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--cth-ink-300)' }}>
-          new work? dispatch it to Michael (monitor tab)
+          new work? dispatch it to the orchestrator (monitor tab)
         </span>
       </div>
 
@@ -258,7 +258,7 @@ function TaskCard({ task, accent, assigneeName, onOpen, onDismiss }: {
           <span title="waiting on YOUR answer — see the ASK ME tab" style={{
             alignSelf: 'center', marginRight: 18, flexShrink: 0,
             fontFamily: 'var(--cth-font-display)', fontSize: 10, padding: '2px 5px 1px',
-            background: 'var(--cth-lilac)', color: 'var(--cth-ink-900)',
+            background: 'var(--cth-lilac)', color: 'var(--cth-on-accent)',
             boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
           }}>?</span>
         )}

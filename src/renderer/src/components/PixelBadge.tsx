@@ -17,6 +17,8 @@ export interface PixelBadgeProps {
   style?: CSSProperties;
 }
 
+/* The mock's status pills: rounded-full, the status hue as text and dot, a
+   dark tint of the same hue as fill, one shade up as the border. */
 const colorByStatus: Record<StatusKind, string> = {
   idle:     'var(--cth-status-idle)',
   thinking: 'var(--cth-status-thinking)',
@@ -28,6 +30,32 @@ const colorByStatus: Record<StatusKind, string> = {
   compacting: 'var(--cth-status-compacting)',
   looping:    'var(--cth-status-looping)',
   typing:     'var(--cth-status-typing)'
+};
+
+const bgByStatus: Record<StatusKind, string> = {
+  idle:     'var(--cth-status-idle-bg)',
+  thinking: 'var(--cth-status-thinking-bg)',
+  working:  'var(--cth-status-working-bg)',
+  waiting:  'var(--cth-status-waiting-bg)',
+  blocked:  'var(--cth-status-blocked-bg)',
+  success:  'var(--cth-status-success-bg)',
+  ghost:    'var(--cth-status-ghost-bg)',
+  compacting: 'var(--cth-status-compacting-bg)',
+  looping:    'var(--cth-status-looping-bg)',
+  typing:     'var(--cth-status-typing-bg)'
+};
+
+const borderByStatus: Record<StatusKind, string> = {
+  idle:     'var(--cth-status-idle-bd)',
+  thinking: 'var(--cth-status-thinking-bd)',
+  working:  'var(--cth-status-working-bd)',
+  waiting:  'var(--cth-status-waiting-bd)',
+  blocked:  'var(--cth-status-blocked-bd)',
+  success:  'var(--cth-status-success-bd)',
+  ghost:    'var(--cth-status-ghost-bd)',
+  compacting: 'var(--cth-status-compacting-bd)',
+  looping:    'var(--cth-status-looping-bd)',
+  typing:     'var(--cth-status-typing-bd)'
 };
 
 // Human-readable labels. "blocked" is reserved for the god agent waiting on YOU,
@@ -55,24 +83,28 @@ export function PixelBadge({ status, label, style }: PixelBadgeProps) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 6,
-        padding: '2px 8px 0',
-        background: 'var(--cth-cream-100)',
-        boxShadow: `inset 0 0 0 1px ${colorByStatus[status]}`,
+        gap: 5,
+        padding: '1px 7px',
+        background: bgByStatus[status],
+        boxShadow: `inset 0 0 0 1px ${borderByStatus[status]}`,
+        borderRadius: 'var(--cth-radius-pill)',
         fontFamily: 'var(--cth-font-ui)',
         fontSize: 'var(--cth-text-body-sm)',
-        lineHeight: '18px',
-        color: 'var(--cth-ink-900)',
+        fontWeight: 600,
+        lineHeight: '16px',
+        color: colorByStatus[status],
+        whiteSpace: 'nowrap',
         userSelect: 'none',
         ...style
       }}
     >
       <span
         style={{
-          width: 8,
-          height: 8,
-          background: colorByStatus[status],
-          boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: 'currentColor',
+          flex: '0 0 6px'
         }}
       />
       {text}

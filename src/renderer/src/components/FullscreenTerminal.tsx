@@ -9,14 +9,13 @@ import { AgentControlStrip } from './AgentControlStrip';
 import { CommandCenterPanel } from './CommandCenterPanel';
 import { Icon } from './Icon';
 import { AgentAvatar, AVATAR_UNIT } from './AgentAvatar';
-import { RealtimeMichaelToggle } from './RealtimeMichaelToggle';
+import { RealtimeVoiceToggle } from './RealtimeVoiceToggle';
 import { CostHud } from '@/realtime/CostHud';
 import { useStore, type Agent } from '@/store/store';
 import { usePtyParser } from '@/hooks/usePtyParser';
 import { useRestoreTeam } from '@/hooks/useRestoreTeam';
 import { useTerminalFontSize } from './terminalFontSize';
 import { useHasTerminalDraft, disposeTerminal } from './terminalPool';
-import { useAppTheme, toggleAppTheme } from '@/design/theme';
 import type { HarnessConfig } from '@/store/config';
 
 /** Roster rail width. A fixed 232px is right on a 14" laptop but reads as a
@@ -156,7 +155,6 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
   // The floor strip (and with it the restore button) is hidden behind the
   // overlay, so the roster carries restore too.
   const { restoring, autoRestoring, restoreTeam } = useRestoreTeam(config);
-  const appThemeNow = useAppTheme();
 
   const agent = agents.find(a => a.id === fullscreenAgentId);
   const parser = usePtyParser(agent?.id ?? '__none__');
@@ -288,30 +286,12 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               // Pressed-in when collapsed, so the rail's absence reads as a state
               // this button is holding rather than something that broke.
               background: rosterCollapsed ? 'var(--cth-lemon)' : 'var(--cth-paper-100)',
-              boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
-              color: rosterCollapsed ? 'var(--cth-ink-900)' : 'var(--cth-ink-900)'
+              boxShadow: rosterCollapsed ? 'none' : 'inset 0 0 0 1px var(--cth-ink-300)',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
+              color: rosterCollapsed ? 'var(--cth-on-accent)' : 'var(--cth-ink-900)'
             }}
           >
             <Icon name="sidebar" size={1} style={{ width: 16, height: 16 }} />
-          </button>
-          <button
-            onClick={() => {
-              const next = toggleAppTheme();
-              void window.cth.updateConfig({ terminalTheme: next });
-            }}
-            title={appThemeNow === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'}
-            aria-label="Toggle dark mode"
-            style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 28, height: 28, padding: 0,
-              background: 'var(--cth-paper-100)',
-              boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
-              color: 'var(--cth-ink-900)', fontSize: 13, lineHeight: 1
-            }}
-          >
-            {appThemeNow === 'dark' ? '☀' : '☾'}
           </button>
           {/* Settings — the main title bar has it, so fullscreen must too:
               anything reachable in one mode and not the other is a trap. Uses
@@ -327,7 +307,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               width: 28, height: 28, padding: 0,
               background: 'var(--cth-paper-100)',
               boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
               color: 'var(--cth-ink-900)'
             }}
           >
@@ -349,7 +329,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
               width: 28, height: 28, padding: 0,
               background: 'var(--cth-paper-100)',
               boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              border: 'none', borderRadius: 2, cursor: 'pointer',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
               color: 'var(--cth-ink-900)'
             }}
           >
@@ -527,7 +507,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
           padding: 12, gap: 10
         }}>
           {agent.isGod ? (
-            // Michael runs the floor from the command center — its tabs (tasks,
+            // the orchestrator runs the floor from the command center — its tabs (tasks,
             // ask me, triggers, memory, graph…) are the whole point of selecting
             // him, and fullscreen used to drop them for a bare terminal.
             // Column so the panel's `height: 100%` resolves against a definite
@@ -891,7 +871,7 @@ function Header({ agent }: { agent: Agent }) {
 
   /** Kill + archive, mirroring AgentDetailPanel. Confirmed, because it ends a
    *  running process. God is exempt: the floor respawns it immediately, so the
-   *  button would read as "restart Michael" while looking like "close". */
+   *  button would read as "restart the orchestrator" while looking like "close". */
   const onKill = async () => {
     if (!agent.ptyId) return;
     if (!confirm(`Close ${agent.name}? The PTY process will terminate and the agent is archived (kept in history, off the floor).`)) return;
@@ -927,11 +907,11 @@ function Header({ agent }: { agent: Agent }) {
             fullscreen does not change the selection, so leaving the IDE to infer
             its agent would open whichever agent happens to be selected in the
             sidebar rather than the one filling the screen. */}
-        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls Michael (the
+        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls the orchestrator (the
             god orchestrator) globally, not the agent in view, so users can start a
             voice session even while a worker's terminal fills the screen. The cost
-            HUD stays Michael-only (it belongs to his card). */}
-        <RealtimeMichaelToggle />
+            HUD stays the orchestrator-only (it belongs to his card). */}
+        <RealtimeVoiceToggle />
         {agent.isGod && <CostHud compact />}
         <PixelButton variant="secondary" size="sm" onClick={openTerminal} disabled={openState === 'opening'}>
           <span
