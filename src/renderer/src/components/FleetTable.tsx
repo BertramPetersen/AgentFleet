@@ -73,7 +73,7 @@ export function FleetTable() {
   const agents = useStore((s) => s.agents);
   const selectedId = useStore((s) => s.selectedId);
   const select = useStore((s) => s.select);
-  const setFullscreen = useStore((s) => s.setFullscreen);
+  const openInspector = useStore((s) => s.openInspector);
   const setAddAgentOpen = useStore((s) => s.setAddAgentOpen);
   const { samples, rate, lastTool, breakers } = useFleetTelemetry();
 
@@ -81,6 +81,9 @@ export function FleetTable() {
   const [desc, setDesc] = useState(true);
   const [query, setQuery] = useState('');
   const [onlyAttention, setOnlyAttention] = useState(false);
+  // One id, not per-row state: the only thing hover drives is revealing the
+  // row's "open" affordance, which double-click alone left undiscoverable.
+  const [hoverId, setHoverId] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -244,8 +247,10 @@ export function FleetTable() {
               key={a.id}
               data-agent-id={a.id}
               onClick={() => select(a.id)}
-              onDoubleClick={() => a.ptyId && setFullscreen(a.id)}
-              title={a.ptyId ? 'Click to select · double-click for the full terminal' : 'No live process'}
+              onDoubleClick={() => openInspector(a.id)}
+              onMouseEnter={() => setHoverId(a.id)}
+              onMouseLeave={() => setHoverId((cur) => (cur === a.id ? null : cur))}
+              title="Click to select · double-click to open the inspector"
               style={{
                 display: 'grid', gridTemplateColumns: GRID, gap: 10,
                 alignItems: 'center', padding: '7px 12px', cursor: 'pointer',
@@ -335,6 +340,18 @@ export function FleetTable() {
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {breaker ? BREAKER_LABEL[breaker.level] ?? breaker.level : (a.ptyId ? 'ok' : 'no process')}
                 </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); openInspector(a.id); }}
+                  title={`Open ${a.name} in the inspector`}
+                  style={{
+                    marginLeft: 'auto', padding: '1px 6px', border: 'none', cursor: 'pointer',
+                    fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+                    background: 'var(--cth-cream-100)',
+                    boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+                    color: 'var(--cth-ink-900)',
+                    visibility: (hoverId === a.id || on) ? 'visible' : 'hidden'
+                  }}
+                >open ›</button>
               </span>
             </div>
           );

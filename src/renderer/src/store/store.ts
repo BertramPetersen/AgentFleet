@@ -141,6 +141,12 @@ interface State {
    *  auto-respawn). */
   restorableAgents: Agent[];
   selectedId: string | null;
+  /** The agent open in the full-width inspector, or null for the fleet list.
+   *  Deliberately separate from `selectedId`: selection is "which agent is the
+   *  sidebar talking about", and it changes constantly as you click around the
+   *  fleet. Opening an inspector is a navigation, and it should survive those
+   *  clicks. */
+  inspectorId: string | null;
   feeds: Record<string, string[]>;
   addAgentOpen: boolean;
   fullscreenAgentId: string | null;
@@ -265,6 +271,9 @@ interface State {
   pendingHire: HireManifest | null;
   setPendingHire: (m: HireManifest | null) => void;
   setFullscreen: (id: string | null) => void;
+  /** Open the full-width inspector on an agent (also selects it), or close it. */
+  openInspector: (id: string) => void;
+  closeInspector: () => void;
   setFullscreenFile: (path: string | null, view?: 'edit' | 'preview') => void;
   /** Open/close the IDE. `agentId` names the agent whose workspace it should
    *  show; omit it only when the caller truly has no specific agent (the IDE
@@ -574,6 +583,7 @@ export const useStore = create<State>((set) => ({
   archivedAgents: initialArchivedAgents,
   restorableAgents: initialRestorableAgents,
   selectedId: initialSelectedId,
+  inspectorId: null,
   feeds: {},
   addAgentOpen: false,
   ccTabRequest: null,
@@ -824,6 +834,8 @@ export const useStore = create<State>((set) => ({
   pendingHire: null,
   setPendingHire: (m) => set({ pendingHire: m }),
   setFullscreen: (id) => set({ fullscreenAgentId: id }),
+  openInspector: (id) => set({ inspectorId: id, selectedId: id }),
+  closeInspector: () => set({ inspectorId: null }),
   setFullscreenFile: (path, view) => set({ fullscreenFilePath: path, fullscreenFileView: view ?? 'edit' }),
   // Closing CLEARS the target: the id is scoped to one IDE session, and a stale
   // one left behind would silently win over the selection on the next open from
