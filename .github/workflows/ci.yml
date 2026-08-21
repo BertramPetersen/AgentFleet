@@ -20,6 +20,14 @@ jobs:
         run: npm ci
       - name: Typecheck (node + web)
         run: npm run typecheck
+      # The assignment rules' behavioral spec, run through the real replay
+      # harness over a synthesized hive history. Cheap (seconds), and it is the
+      # only executable check on how work gets routed.
+      - name: Replay selftest (assignment rules)
+        run: |
+          git config --global user.name Hive
+          git config --global user.email hive@local
+          npm run replay:selftest
 
   build:
     name: Build
