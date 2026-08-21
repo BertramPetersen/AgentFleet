@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore, type Agent } from '@/store/store';
 import { agentsInProject, type Project } from '@/store/projects';
 import { useFleetTelemetry, totalTokens } from '@/hooks/useTelemetry';
+import type { HarnessConfig } from '@/store/config';
+import { RestoreTeamButton } from './RestoreTeamButton';
 import { PixelBadge } from './PixelBadge';
 import { AgentAvatar } from './AgentAvatar';
 import { Icon } from './Icon';
@@ -73,7 +75,7 @@ const HEAD: { key: SortKey; label: string; width: string; align?: 'right' }[] = 
 
 const GRID = HEAD.map((h) => h.width).join(' ');
 
-export function FleetTable() {
+export function FleetTable({ config }: { config?: HarnessConfig | null }) {
   const agents = useStore((s) => s.agents);
   const selectedId = useStore((s) => s.selectedId);
   const select = useStore((s) => s.select);
@@ -195,6 +197,8 @@ export function FleetTable() {
         >
           <Icon name="plus" /> agent
         </button>
+
+        <RestoreTeamButton config={config} />
 
         <input
           value={query}

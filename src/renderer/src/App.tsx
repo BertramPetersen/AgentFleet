@@ -3,6 +3,7 @@ import { useStore, selectedAgent } from '@/store/store';
 import type { HarnessConfig } from '@/store/config';
 import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { FleetTable } from '@/components/FleetTable';
+import { useRestoreTeam } from '@/hooks/useRestoreTeam';
 import { AgentInspector } from '@/components/AgentInspector';
 import { BacklogBoard } from '@/components/BacklogBoard';
 import { NeedsYouInbox } from '@/components/NeedsYouInbox';
@@ -10,7 +11,6 @@ import { ProjectRail } from '@/components/ProjectRail';
 import { useHive } from '@/hooks/useHive';
 import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
-import { AgentStrip } from '@/components/AgentStrip';
 import { AddAgentModal } from '@/components/AddAgentModal';
 import { OrchestratorBooting } from '@/components/OrchestratorBooting';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
@@ -49,6 +49,10 @@ export function App() {
   const inspected = agents.find(a => a.id === inspectorId);
 
   const [config, setConfig] = useState<HarnessConfig | null>(null);
+  // Arm the boot auto-restore at the app root: it must not depend on which
+  // view happens to be mounted 2.5s after launch. The hook latches its auto
+  // run, so the fleet toolbar's own mount is a safe second consumer.
+  useRestoreTeam(config);
   // Whether the user has passed the launch-time hive picker this session. Starts
   // true (skip the picker) right after a hive SWITCH — changeHome relaunches and
   // leaves a one-shot localStorage flag so we don't bounce back onto the picker for
@@ -325,7 +329,7 @@ export function App() {
             ? <AgentInspector agent={inspected} />
             : mainView === 'backlog' ? <BacklogBoard />
               : mainView === 'needs' ? <NeedsYouInbox />
-                : <FleetTable />}
+                : <FleetTable config={config} />}
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <OrchestratorBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (
@@ -407,8 +411,6 @@ export function App() {
           )}
         </div>}
       </div>
-
-      <AgentStrip config={config} />
 
       {addAgentOpen && (
         <AddAgentModal
