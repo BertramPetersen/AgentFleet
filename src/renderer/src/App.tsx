@@ -5,6 +5,7 @@ import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { FleetTable } from '@/components/FleetTable';
 import { useRestoreTeam } from '@/hooks/useRestoreTeam';
 import { CanvasView } from '@/components/CanvasView';
+import { HouseRulesView } from '@/components/HouseRulesView';
 import { AgentInspector } from '@/components/AgentInspector';
 import { BacklogBoard } from '@/components/BacklogBoard';
 import { NeedsYouInbox } from '@/components/NeedsYouInbox';
@@ -331,7 +332,8 @@ export function App() {
             : mainView === 'backlog' ? <BacklogBoard />
               : mainView === 'needs' ? <NeedsYouInbox />
                 : mainView === 'canvas' ? <CanvasView />
-                  : <FleetTable config={config} />}
+                  : mainView === 'rules' ? <HouseRulesView />
+                    : <FleetTable config={config} />}
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <OrchestratorBooting />}
           {agentCount === 0 && godStatus !== 'booting' && (

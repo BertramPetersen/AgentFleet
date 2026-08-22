@@ -164,6 +164,43 @@ export class PreferenceStore {
     ].join('\n');
   }
 
+  /** The human pushed back on a rule (C3): confidence decays, and an entry
+   *  that keeps being overridden sinks below the floor and stops riding
+   *  dispatches on its own — the ledger converges on how the human actually
+   *  reviews, not on what it once guessed. */
+  override(id: string): Preference | null {
+    const prefs = this.list();
+    const p = prefs.find((x) => x.id === id);
+    if (!p) return null;
+    p.overridden += 1;
+    p.confidence = Math.max(0, Number((p.confidence - 0.15).toFixed(2)));
+    p.updatedAt = new Date().toISOString();
+    this.write(prefs, `hive: preference overridden (${id})`);
+    return p;
+  }
+
+  /** The human vouched for a rule: confidence climbs. */
+  boost(id: string): Preference | null {
+    const prefs = this.list();
+    const p = prefs.find((x) => x.id === id);
+    if (!p) return null;
+    p.confidence = Math.min(1, Number((p.confidence + 0.1).toFixed(2)));
+    p.updatedAt = new Date().toISOString();
+    this.write(prefs, `hive: preference boosted (${id})`);
+    return p;
+  }
+
+  /** Retirement is a state, not a deletion: confidence to zero, entry stays. */
+  retire(id: string): Preference | null {
+    const prefs = this.list();
+    const p = prefs.find((x) => x.id === id);
+    if (!p) return null;
+    p.confidence = 0;
+    p.updatedAt = new Date().toISOString();
+    this.write(prefs, `hive: preference retired (${id})`);
+    return p;
+  }
+
   /** Exposure accounting for the entries that just rode a dispatch. */
   markApplied(ids: string[]): void {
     if (ids.length === 0) return;

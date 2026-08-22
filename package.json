@@ -26,7 +26,8 @@
     "dist:linux": "npm run build && electron-builder --linux",
     "replay": "node tools/replay-assignment.mjs",
     "replay:selftest": "node tools/replay-selftest.mjs",
-    "compliance:selftest": "node tools/compliance-selftest.mjs"
+    "compliance:selftest": "node tools/compliance-selftest.mjs",
+    "review:eval": "node tools/review-eval.mjs"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",

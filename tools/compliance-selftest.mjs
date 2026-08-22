@@ -36,6 +36,8 @@ const loadTs = async (name) => {
   return import(pathToFileURL(f).href);
 };
 const { PreferenceStore, CONFIDENCE_FLOOR } = await loadTs('preferences');
+const { parseFindingsReport, FindingsHarvester } = await loadTs('findingsHarvester');
+const { CorrectionMiner, mineCardId } = await loadTs('correctionMiner');
 const { AssignmentEngine } = await loadTs('assignmentEngine');
 
 // ── an in-memory hive, shaped like the structural deps ──────────────────────
@@ -165,6 +167,76 @@ expect(sent.length === 1 && sent[0].body.includes('HOUSE PREFERENCES') && sent[0
   'a compliance dispatch carries the house preferences');
 expect(store.list().find((x) => x.id === learned.id)?.applied === 2,
   'injection counts as exposure');
+
+// ── decay (C3) ──────────────────────────────────────────────────────────────
+const decaying = store.upsert({ rule: 'A rule the human keeps rejecting', confidence: 0.4, rationale: 't', evidence: [] });
+store.override(decaying.id);
+const afterOne = store.list().find((x) => x.id === decaying.id);
+store.override(decaying.id);
+const afterTwo = store.list().find((x) => x.id === decaying.id);
+expect(afterOne.confidence === 0.25 && afterOne.overridden === 1,
+  'an override decays confidence and counts');
+expect(afterTwo.confidence < CONFIDENCE_FLOOR && !store.digest().includes('keeps rejecting'),
+  'repeated overrides sink a rule below the floor — it stops riding dispatches on its own');
+store.boost(decaying.id);
+expect(store.list().find((x) => x.id === decaying.id).confidence === 0.2,
+  'boost climbs back — nothing is ever deleted');
+
+// ── findings harvester (C3) ─────────────────────────────────────────────────
+const report = parseFindingsReport(
+  'Verdict: REQUEST_CHANGES on rev-alpha-7.\n' +
+  'Here are my findings:\n```json\n{"findings":[{"id":"missing-guard","severity":"error","file":"src/a.ts","line":12,"description":"no traversal guard","action":"fix"},{"id":"bad","description":"kept despite junk severity","severity":"catastrophic"}]}\n```\nthanks'
+);
+expect(report && report.reviewCardId === 'rev-alpha-7' && report.verdict === 'REQUEST_CHANGES',
+  'harvester finds the card id and the verdict in prose');
+expect(report.findings.length === 2 && report.findings[0].file === 'src/a.ts' && report.findings[1].severity === 'info',
+  'findings parse out of fenced JSON; junk severities coerce to info');
+expect(parseFindingsReport('just chatting about rev-alpha-7 with no verdict or findings') === null,
+  'plain chatter mentioning a card harvests nothing');
+
+const harvestState = { tasks: [{ id: 'rev-alpha-7', title: 'r', status: 'doing', dependsOn: [], priority: 1, createdAt: 't' }], log: [] };
+const harvester = new FindingsHarvester({
+  hive: {
+    tasks: () => ({ tasks: harvestState.tasks }),
+    patchTask: (id, patch) => { Object.assign(harvestState.tasks.find((t) => t.id === id), patch); return true; },
+    appendLog: (e) => harvestState.log.push(e)
+  },
+  isComplianceAgent: (id) => id === 'compl-1'
+});
+harvester.onRouted({ from: 'impl-1', subject: 's', body: 'APPROVE rev-alpha-7 {"findings":[]}' });
+expect(!harvestState.tasks[0].verdict, 'reports from non-compliance agents are ignored');
+harvester.onRouted({ from: 'compl-1', subject: 'review done', body: 'APPROVE rev-alpha-7. {"findings":[{"id":"x","description":"minor","severity":"info"}]}' });
+expect(harvestState.tasks[0].verdict === 'APPROVE' && harvestState.tasks[0].findings.length === 1 && harvestState.tasks[0].reviewedBy === 'compl-1',
+  "a compliance agent's report lands on the card: verdict, findings, reviewer");
+
+// ── correction miner (C3) ───────────────────────────────────────────────────
+const mineState = {
+  tasks: [{ id: 'rev-beta-4', title: 'Review PR #4', status: 'done', dependsOn: [], priority: 1, createdAt: 't',
+            projectId: 'beta', labels: ['compliance'], review: { url: 'https://x/pull/4', number: 4, headRef: 'f' } }],
+  log: []
+};
+const miner = new CorrectionMiner({
+  hive: {
+    enabled: () => true,
+    tasks: () => ({ tasks: mineState.tasks }),
+    addTask: (t) => { if (mineState.tasks.some((x) => x.id === t.id)) return false; mineState.tasks.push(t); return true; },
+    patchTask: (id, patch) => { Object.assign(mineState.tasks.find((t) => t.id === id), patch); return true; },
+    appendLog: (e) => mineState.log.push(e)
+  },
+  projects: { list: () => [{ id: 'beta', repoPath: '/repos/beta' }] },
+  prInfo: async () => ({ state: 'MERGED', mergedAt: '2026-01-01T00:00:00Z', files: ['src/x.ts'] }),
+  humanCommits: async () => ['abc1234']
+});
+const mined = await miner.tick();
+const mineCard = mineState.tasks.find((t) => t.id === mineCardId('rev-beta-4'));
+expect(mined.length === 1 && !!mineCard && mineCard.labels.includes('compliance'),
+  'a post-merge human correction becomes a compliance mine-card');
+expect(mineCard.contract.output.includes('humanQA') && mineCard.contract.boundaries.includes('Never write the ledger'),
+  'the mine contract proposes via humanQA and forbids direct ledger writes');
+expect(mineState.tasks.find((t) => t.id === 'rev-beta-4').mined.commits.includes('abc1234'),
+  'the review card is stamped mined');
+const minedAgain = await miner.tick();
+expect(minedAgain.length === 0, 'mining is idempotent — a stamped review is never re-mined');
 
 if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
 console.log('\ncompliance selftest: all assertions hold');
