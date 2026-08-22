@@ -8,6 +8,8 @@ import { PixelButton } from './PixelButton';
 import { PixelBadge } from './PixelBadge';
 import { AgentAvatar } from './AgentAvatar';
 import { Icon } from './Icon';
+import { ProjectGraph } from './ProjectGraph';
+import { descendantsOf } from '@/store/graphLayout';
 
 /**
  * BACKLOG — the work of one project, in the order it should be done.
@@ -44,6 +46,7 @@ export function BacklogBoard() {
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState<string | null>(null); // null = composer closed
+  const [mode, setMode] = useState<'board' | 'graph'>('board');
   const [spend, setSpend] = useState<Record<string, number>>({});
   const [budgetDraft, setBudgetDraft] = useState<string | null>(null); // null = not editing
   const [busy, setBusy] = useState(false);
@@ -188,6 +191,27 @@ export function BacklogBoard() {
           fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
           color: 'var(--cth-ink-500)'
         }}>{mine.filter((t) => t.status !== 'done').length} open</span>
+        <span
+          style={{ display: 'inline-flex', gap: 2, padding: 2, background: 'var(--cth-cream-200)', borderRadius: 'var(--cth-radius-sm)' }}
+          title={activeProjectId ? undefined : 'Pick a project to see its dependency graph'}
+        >
+          {(['board', 'graph'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              disabled={m === 'graph' && !activeProjectId}
+              style={{
+                padding: '2px 10px', border: 'none',
+                cursor: m === 'graph' && !activeProjectId ? 'default' : 'pointer',
+                borderRadius: 4,
+                fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+                background: mode === m ? 'var(--cth-paper-200)' : 'transparent',
+                color: mode === m ? 'var(--cth-ink-900)'
+                  : m === 'graph' && !activeProjectId ? 'var(--cth-ink-300)' : 'var(--cth-ink-700)'
+              }}
+            >{m}</button>
+          ))}
+        </span>
         <span style={{ marginLeft: 'auto' }}>
           {draftTitle === null ? (
             <PixelButton variant="primary" size="sm" onClick={() => setDraftTitle('')} disabled={busy}>
@@ -240,6 +264,12 @@ export function BacklogBoard() {
         </div>
       )}
 
+      {mode === 'graph' && activeProjectId ? (
+        <ProjectGraph
+          tasks={mine}
+          onOpenTask={(id) => { setMode('board'); setOpenId(id); }}
+        />
+      ) : (
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {mine.length === 0 && (
           <div style={{
@@ -271,6 +301,7 @@ export function BacklogBoard() {
                 <TaskRow
                   key={task.id}
                   task={task}
+                  siblings={mine}
                   agents={candidates}
                   expanded={openId === task.id}
                   first={i === 0}
@@ -287,6 +318,7 @@ export function BacklogBoard() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
@@ -294,9 +326,11 @@ export function BacklogBoard() {
 const GRID = '58px minmax(0,1fr) 96px 132px 62px';
 
 function TaskRow({
-  task, agents, expanded, first, last, busy, rankable, onToggle, onPatch, onMove, onOpenAgent
+  task, siblings, agents, expanded, first, last, busy, rankable, onToggle, onPatch, onMove, onOpenAgent
 }: {
   task: ProjectTask;
+  /** The board's scoped cards — the pool the dependency editor picks from. */
+  siblings: ProjectTask[];
   agents: { id: string; name: string; accent: Parameters<typeof AgentAvatar>[0]['accent'] }[];
   expanded: boolean;
   first: boolean;
@@ -384,7 +418,7 @@ function TaskRow({
       </div>
 
       {expanded && (
-        <TaskDetail task={task} agents={agents} busy={busy} onPatch={onPatch} />
+        <TaskDetail task={task} siblings={siblings} agents={agents} busy={busy} onPatch={onPatch} />
       )}
     </div>
   );
@@ -415,13 +449,20 @@ const CONTRACT_FIELDS: { key: keyof TaskContract; label: string; hint: string }[
 ];
 
 function TaskDetail({
-  task, agents, busy, onPatch
+  task, siblings, agents, busy, onPatch
 }: {
   task: ProjectTask;
+  siblings: ProjectTask[];
   agents: { id: string; name: string }[];
   busy: boolean;
   onPatch: (p: Partial<ProjectTask>) => void;
 }) {
+  // A dependency choice must never close a cycle: everything already
+  // downstream of this card is off the menu.
+  const downstream = descendantsOf(task.id, siblings);
+  const depCandidates = siblings.filter((s) =>
+    s.id !== task.id && !downstream.has(s.id) && !(task.dependsOn ?? []).includes(s.id));
+  const titleOf = (id: string): string => siblings.find((s) => s.id === id)?.title ?? id;
   const [draft, setDraft] = useState<TaskContract>({
     objective: task.contract?.objective ?? '',
     output: task.contract?.output ?? '',
@@ -482,6 +523,62 @@ function TaskDetail({
             }}>{task.result}</span>
           </Field>
         )}
+      </div>
+
+      <div>
+        <div style={{
+          fontFamily: 'var(--cth-font-display)', fontSize: 'var(--cth-text-display-sm)',
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+          color: 'var(--cth-ink-500)', marginBottom: 6
+        }}>Depends on</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          {(task.dependsOn ?? []).map((d) => (
+            <span key={d} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '2px 4px 2px 9px',
+              borderRadius: 'var(--cth-radius-sm)',
+              background: 'var(--cth-paper-100)',
+              boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+              fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+              color: 'var(--cth-ink-700)', maxWidth: 280
+            }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {titleOf(d)}
+              </span>
+              <button
+                disabled={busy}
+                onClick={() => onPatch({ dependsOn: (task.dependsOn ?? []).filter((x) => x !== d) })}
+                title="Remove this dependency"
+                aria-label={`Remove dependency ${titleOf(d)}`}
+                style={{
+                  width: 16, height: 16, padding: 0, border: 'none', cursor: 'pointer',
+                  background: 'transparent', color: 'var(--cth-ink-500)', fontSize: 11, lineHeight: 1
+                }}
+              >✕</button>
+            </span>
+          ))}
+          {(task.dependsOn ?? []).length === 0 && (
+            <span style={{
+              fontFamily: 'var(--cth-font-ui)', fontSize: 'var(--cth-text-body-sm)',
+              color: 'var(--cth-ink-500)'
+            }}>none — this card can start any time</span>
+          )}
+          <select
+            value=""
+            disabled={busy || depCandidates.length === 0}
+            onChange={(e) => {
+              if (e.target.value) onPatch({ dependsOn: [...(task.dependsOn ?? []), e.target.value] });
+            }}
+            title={depCandidates.length === 0
+              ? 'No eligible cards — everything else already depends on this one or is linked'
+              : 'Add a dependency — cards downstream of this one are excluded so a cycle can never form'}
+            style={{ ...selectStyle, maxWidth: 230 }}
+          >
+            <option value="">+ add dependency…</option>
+            {depCandidates.map((c) => (
+              <option key={c.id} value={c.id}>{c.title.slice(0, 48)}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div>
