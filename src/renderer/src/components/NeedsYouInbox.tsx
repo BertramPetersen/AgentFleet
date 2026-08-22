@@ -182,6 +182,15 @@ function AskCard({
           fontSize: 'var(--cth-text-body-lg)', lineHeight: 1.5, color: 'var(--cth-ink-900)'
         }}>“{ask.question}”</p>
 
+        {(ask.task.labels ?? []).some((l) => l.toLowerCase() === 'compliance') && (
+          <p style={{
+            margin: '0 0 8px', fontFamily: 'var(--cth-font-ui)',
+            fontSize: 'var(--cth-text-body-sm)', color: 'var(--cth-ink-500)'
+          }}>
+            This is a review card — your answer is also recorded to the house
+            preference ledger, so future reviews apply it.
+          </p>
+        )}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

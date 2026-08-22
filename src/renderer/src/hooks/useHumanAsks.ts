@@ -188,6 +188,15 @@ export function useHumanAsks(projectId?: string | null): UseHumanAsks {
           "The answer is also recorded in the card's humanQA. Act on it, unblock the card, and continue the work."
         ].join('\n')
       }, 'human');
+      // The explicit learning loop (C2): an answer on a COMPLIANCE review card
+      // is feedback on how the human wants work judged — it also lands in the
+      // preference ledger. Best-effort: the answer itself already succeeded,
+      // and the Needs-you card says out loud that this recording happens.
+      if ((task.labels ?? []).some((l) => l.toLowerCase() === 'compliance')) {
+        window.cth.complianceRecordAnswer?.({
+          taskId: task.id, question: open.q, answer: body, projectId: task.projectId
+        }).catch(() => { /* ledger write failed — the answer still landed */ });
+      }
       return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'the answer could not be delivered');
