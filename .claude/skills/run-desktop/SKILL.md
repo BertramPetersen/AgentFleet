@@ -59,7 +59,8 @@ Then read `.run-shots/01-shell.png`.
 | `eval <js>` | evaluate in the renderer, print JSON |
 | `agents` | list rendered `[data-agent-id]` rows |
 | `logs` | everything the renderer logged, including swallowed errors |
-| `quit` | close the app and kill the process tree |
+| `quit` | close the app and kill the process tree — the REPL stays up, so `launch` again for a fresh instance (never restart the driver process for a relaunch: the new invocation races the dying REPL) |
+| `exit` | leave the driver REPL |
 
 ## State is isolated
 

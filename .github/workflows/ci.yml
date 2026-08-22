@@ -28,6 +28,7 @@ jobs:
           git config --global user.name Hive
           git config --global user.email hive@local
           npm run replay:selftest
+          npm run compliance:selftest
 
   build:
     name: Build

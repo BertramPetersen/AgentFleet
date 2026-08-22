@@ -290,6 +290,9 @@ export interface HarnessConfig {
    *  rules only ever route a contracted, project-filed ready card to an idle
    *  member, so their failure mode is inaction, not surprise. */
   autoAssign?: boolean;
+  /** Compliance intake (C1). ON unless explicitly false: every open PR in a
+   *  project repo becomes a review card routed to the compliance department. */
+  complianceIntake?: boolean;
   /** Anonymous product analytics (PostHog) — the exact events/properties are
    *  documented in TELEMETRY.md. Default ON (opt-out, like autoUpdate); builds
    *  without an injected key and environments with DO_NOT_TRACK set never send

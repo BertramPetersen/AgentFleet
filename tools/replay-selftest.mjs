@@ -46,7 +46,8 @@ write('registry.json', {
     'impl-1': { id: 'impl-1', name: 'impl-1', cwd: REPO, role: 'implementation', capabilities: ['backend'], status: 'idle', lastSeen: 1 },
     'test-1': { id: 'test-1', name: 'test-1', cwd: `${REPO}/agent/test-1`, role: 'tests', status: 'idle', lastSeen: 1 },
     'docs-1': { id: 'docs-1', name: 'docs-1', cwd: DOCS, role: 'docs', status: 'idle', lastSeen: 1 },
-    'spend-1': { id: 'spend-1', name: 'spend-1', cwd: CAPPED, role: 'implementation', status: 'idle', lastSeen: 1 }
+    'spend-1': { id: 'spend-1', name: 'spend-1', cwd: CAPPED, role: 'implementation', status: 'idle', lastSeen: 1 },
+    'compl-1': { id: 'compl-1', name: 'compl-1', cwd: '/office/compliance', role: 'compliance reviewer', capabilities: ['compliance'], status: 'idle', lastSeen: 1 }
   }
 });
 write('projects.json', {
@@ -72,7 +73,10 @@ const t0 = [
   { id: 'it-1', title: 'Document the API', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-04', projectId: 'internal-tools', rank: '000010', assignee: 'docs-1', contract },
   { id: 'x-1', title: 'A card with no home', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-05', contract },
   { id: 'be-1', title: 'More work for a capped project', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-06', projectId: 'budget-engine', rank: '000010', contract },
-  { id: 'be-2', title: 'Explicitly assigned into the cap', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-07', projectId: 'budget-engine', rank: '000020', assignee: 'spend-1', contract }
+  { id: 'be-2', title: 'Explicitly assigned into the cap', status: 'todo', dependsOn: [], priority: 0, createdAt: '2026-01-07', projectId: 'budget-engine', rank: '000020', assignee: 'spend-1', contract },
+  { id: 'rev-pe-9', title: 'Review PR #9', status: 'todo', dependsOn: [], priority: 1, createdAt: '2026-01-08', projectId: 'pricing-engine', labels: ['compliance'], contract },
+  { id: 'rev-be-3', title: 'Review PR #3 in the capped project', status: 'todo', dependsOn: [], priority: 1, createdAt: '2026-01-09', projectId: 'budget-engine', labels: ['compliance'], contract },
+  { id: 'pe-9', title: 'Old work now under review', status: 'review', dependsOn: [], priority: 0, createdAt: '2026-01-01', projectId: 'pricing-engine', assignee: 'impl-1', contract }
 ];
 write('tasks.json', { tasks: t0 });
 commit('hive: tasks (5)');
@@ -120,6 +124,15 @@ expect(at('be-1', 'over-budget').length > 0 && at('be-1', 'over-budget').every((
   'be-1: a capped project dispatches nothing ($6 spent of $5 — per-session max, not row sum)');
 expect(at('be-2', 'over-budget').length > 0,
   'be-2: even an explicit assignee is held while the project is over budget');
+expect(at('rev-pe-9', 'idle-pull').some((r) => r.decision === 'dispatch→compl-1'),
+  'rev-pe-9: compliance card routes cross-project to the compliance agent');
+expect(at('rev-be-3', 'over-budget').length === 0
+    && trace.some((r) => r.task.endsWith('rev-be-3') && (r.rule === 'idle-pull' || r.rule === 'no-idle-member')),
+  'rev-be-3: a review in a capped project is never budget-held — only reviewer scarcity holds it');
+expect(trace.every((r) => r.decision !== 'dispatch→compl-1' || r.task.startsWith('rev-')),
+  'compliance agents never receive non-review work');
+expect(at('pe-1', 'idle-pull').some((r) => r.decision === 'dispatch→impl-1'),
+  'pe-9 in review does not busy impl-1 — the author is back in the hive');
 
 if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
 console.log('\nreplay selftest: all assertions hold');

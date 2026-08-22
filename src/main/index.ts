@@ -28,6 +28,7 @@ import { ProjectStore } from './projects';
 import { AssignmentEngine } from './assignmentEngine';
 import { ledgerSpendReader, projectSpend } from './budget';
 import { CanvasServer } from './canvas';
+import { PrWatcher } from './prWatcher';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -266,6 +267,11 @@ const canvas = new CanvasServer({
   }
 });
 
+// Compliance intake (C1): watch each project's open PRs; a new PR becomes a
+// review card the rules route to the compliance department, and the author's
+// work card flips to 'review' so its agent is free again (decision D2).
+const prWatcher = new PrWatcher({ hive, projects });
+
 const assigner = new AssignmentEngine({
   hive,
   projects,
@@ -314,6 +320,7 @@ const breaker = new CircuitBreaker(() => {
 // heartbeat mission is disabled (it ships off).
 let fleetTimer: ReturnType<typeof setInterval> | null = null;
 let assignTimer: ReturnType<typeof setInterval> | null = null;
+let prWatchTimer: ReturnType<typeof setInterval> | null = null;
 let breakerBeatTimer: ReturnType<typeof setInterval> | null = null;
 // Feed the breaker's api_error-storm trip from Oscar's OTel api_error spans —
 // Jim's one breaker input with no on-branch source (telemetry.onApiError seam).
@@ -4745,6 +4752,12 @@ function armAlwaysOnBeats(): void {
       if (readConfig().autoAssign !== false) assigner.tick();
     } catch (e) { console.error('[auto-assign]', e); }
   }, 10_000);
+  if (prWatchTimer) clearInterval(prWatchTimer);
+  prWatchTimer = setInterval(() => {
+    if (readConfig().complianceIntake !== false) {
+      prWatcher.tick().catch((e) => console.error('[compliance intake]', e));
+    }
+  }, 60_000);
 }
 
 /** Wall-clock instant we last observed the machine suspend or lock, so a resume

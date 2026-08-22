@@ -25,6 +25,7 @@ const POLL_MS = 5000;
 
 const GROUPS: { status: ProjectTask['status']; label: string; tone: string }[] = [
   { status: 'doing',   label: 'In progress', tone: 'var(--cth-status-working)' },
+  { status: 'review',  label: 'In review',   tone: 'var(--cth-status-compacting)' },
   { status: 'blocked', label: 'Blocked',     tone: 'var(--cth-status-blocked)' },
   { status: 'todo',    label: 'Ready',       tone: 'var(--cth-status-idle)' },
   { status: 'done',    label: 'Done',        tone: 'var(--cth-status-success)' }
@@ -349,7 +350,7 @@ function TaskRow({
           </span>
         </span>
 
-        <span><PixelBadge status={task.status === 'doing' ? 'working' : task.status === 'blocked' ? 'blocked' : task.status === 'done' ? 'success' : 'idle'} /></span>
+        <span><PixelBadge status={task.status === 'doing' ? 'working' : task.status === 'review' ? 'compacting' : task.status === 'blocked' ? 'blocked' : task.status === 'done' ? 'success' : 'idle'} label={task.status === 'review' ? 'in review' : undefined} /></span>
 
         <span style={{ minWidth: 0 }}>
           {assignee ? (
@@ -457,6 +458,7 @@ function TaskDetail({
           >
             <option value="todo">todo</option>
             <option value="doing">doing</option>
+            <option value="review">review</option>
             <option value="blocked">blocked</option>
             <option value="done">done</option>
           </select>

@@ -71,6 +71,18 @@ export interface FleetState {
   projects: RuleProject[];
 }
 
+/** The compliance department is fleet-wide: a card labeled 'compliance'
+ *  routes to a compliance-capable agent REGARDLESS of project membership —
+ *  reviewers must not need a checkout in every repo they review. */
+export function isComplianceCard(t: RuleTask): boolean {
+  return (t.labels ?? []).some((l) => l.toLowerCase() === 'compliance');
+}
+
+export function isComplianceAgent(a: RuleAgent): boolean {
+  const hay = [...(a.capabilities ?? []), a.role ?? ''].join(' ').toLowerCase();
+  return hay.includes('compliance');
+}
+
 export type RuleId =
   | 'explicit-assignee'   // rule 1 — dispatch to the assignee already on the card
   | 'idle-pull'           // rule 3 (+2) — top-ranked ready card to an idle member
@@ -194,11 +206,14 @@ export function decideAssignments(state: FleetState): Decision[] {
       }
       const p = t.projectId ? projects.get(t.projectId) : undefined;
       // Rule 4 — even an explicit assignee never crosses a project boundary.
-      if (p && !isMember(a, p) && !a.isGod) {
+      // Compliance cards are the one exception: the department is fleet-wide.
+      if (p && !isMember(a, p) && !a.isGod && !(isComplianceCard(t) && isComplianceAgent(a))) {
         decisions.push({ taskId: t.id, action: 'hold', rule: 'not-a-member', reason: `"${a.id}" is not a member of ${p.id}` });
         continue;
       }
-      if (p && overBudget(p)) {
+      // Reviews are exempt from the budget hold: the spend already happened,
+      // and an unreviewed PR is waste compounding.
+      if (p && overBudget(p) && !isComplianceCard(t)) {
         decisions.push({ taskId: t.id, action: 'hold', rule: 'over-budget', reason: overBudgetReason(p) });
         continue;
       }
@@ -219,7 +234,7 @@ export function decideAssignments(state: FleetState): Decision[] {
       continue;
     }
     const p = projects.get(t.projectId) as RuleProject;
-    if (overBudget(p)) {
+    if (overBudget(p) && !isComplianceCard(t)) {
       decisions.push({ taskId: t.id, action: 'hold', rule: 'over-budget', reason: overBudgetReason(p) });
       continue;
     }
@@ -227,9 +242,16 @@ export function decideAssignments(state: FleetState): Decision[] {
       decisions.push({ taskId: t.id, action: 'hold', rule: 'no-contract', reason: 'no dispatch contract (objective + output are the minimum)' });
       continue;
     }
-    const members = agents.filter((a) => eligible(a) && isMember(a, p));
+    const members = isComplianceCard(t)
+      ? agents.filter((a) => eligible(a) && isComplianceAgent(a))
+      : agents.filter((a) => eligible(a) && isMember(a, p));
     if (members.length === 0) {
-      decisions.push({ taskId: t.id, action: 'hold', rule: 'no-idle-member', reason: `${p.id} has no eligible members` });
+      decisions.push({
+        taskId: t.id, action: 'hold', rule: 'no-idle-member',
+        reason: isComplianceCard(t)
+          ? 'no compliance agent on the fleet — spawn one with capability "compliance"'
+          : `${p.id} has no eligible members`
+      });
       continue;
     }
     // Rule 3 — pull by the first idle, capable, un-busied member.
