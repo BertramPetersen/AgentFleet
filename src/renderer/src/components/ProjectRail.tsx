@@ -102,6 +102,12 @@ export function ProjectRail() {
         on={mainView === 'canvas'}
         onClick={() => setMainView('canvas')}
       />
+      <RailItem
+        icon="ledger"
+        label="House rules"
+        on={mainView === 'rules'}
+        onClick={() => setMainView('rules')}
+      />
       {/* Always present, even at zero: it is a place you navigate to, and hiding
           it when the queue empties makes it feel like it moved. */}
       <RailItem

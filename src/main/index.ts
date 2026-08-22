@@ -30,6 +30,9 @@ import { ledgerSpendReader, projectSpend } from './budget';
 import { CanvasServer } from './canvas';
 import { PrWatcher } from './prWatcher';
 import { PreferenceStore } from './preferences';
+import { FindingsHarvester } from './findingsHarvester';
+import { CorrectionMiner } from './correctionMiner';
+import { isComplianceAgent } from './assignment';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -277,6 +280,20 @@ const prWatcher = new PrWatcher({ hive, projects });
 // every compliance dispatch and grown from Needs-you answers on review cards.
 const preferences = new PreferenceStore(hive);
 
+// C3: reviewer reports become card data (findings/verdict harvested from the
+// message stream), and post-merge human corrections become mine-cards whose
+// proposals flow back through the same Needs-you capture C2 built.
+const harvester = new FindingsHarvester({
+  hive,
+  isComplianceAgent: (agentId) => {
+    try {
+      const a = hive.registry().agents[agentId];
+      return !!a && isComplianceAgent(a);
+    } catch { return false; }
+  }
+});
+const correctionMiner = new CorrectionMiner({ hive, projects });
+
 const assigner = new AssignmentEngine({
   hive,
   projects,
@@ -327,6 +344,7 @@ const breaker = new CircuitBreaker(() => {
 let fleetTimer: ReturnType<typeof setInterval> | null = null;
 let assignTimer: ReturnType<typeof setInterval> | null = null;
 let prWatchTimer: ReturnType<typeof setInterval> | null = null;
+let mineTimer: ReturnType<typeof setInterval> | null = null;
 let breakerBeatTimer: ReturnType<typeof setInterval> | null = null;
 // Feed the breaker's api_error-storm trip from Oscar's OTel api_error spans —
 // Jim's one breaker input with no on-branch source (telemetry.onApiError seam).
@@ -3280,6 +3298,16 @@ ipcMain.handle('compliance:prefs', () => {
   if (!hive.enabled()) return [];
   try { return preferences.list(); } catch { return []; }
 });
+ipcMain.handle('compliance:patchPref', (_evt, id: unknown, action: unknown) => {
+  if (!hive.enabled() || typeof id !== 'string') return { ok: false };
+  try {
+    const pref = action === 'override' ? preferences.override(id)
+      : action === 'boost' ? preferences.boost(id)
+        : action === 'retire' ? preferences.retire(id)
+          : null;
+    return { ok: !!pref, pref };
+  } catch { return { ok: false }; }
+});
 ipcMain.handle('compliance:recordAnswer', (_evt, input: unknown) => {
   if (!hive.enabled()) return { ok: false };
   const i = input as { taskId?: string; question?: string; answer?: string; projectId?: string };
@@ -3592,7 +3620,10 @@ const closingTime = new ClosingTimeController(
   // at their next hook boundary instead of waiting for a Stop.
   control
 );
-hive.setRoutedObserver((msg, targets) => closingTime.onRouted(msg, targets));
+hive.setRoutedObserver((msg, targets) => {
+  closingTime.onRouted(msg, targets);
+  harvester.onRouted(msg); // chained — the observer slot is single
+});
 ipcMain.handle('app:startClosingTime', () => closingTime.start());
 ipcMain.handle('app:cancelClosingTime', () => closingTime.cancel());
 
@@ -4779,6 +4810,12 @@ function armAlwaysOnBeats(): void {
       prWatcher.tick().catch((e) => console.error('[compliance intake]', e));
     }
   }, 60_000);
+  if (mineTimer) clearInterval(mineTimer);
+  mineTimer = setInterval(() => {
+    if (readConfig().complianceIntake !== false) {
+      correctionMiner.tick().catch((e) => console.error('[correction miner]', e));
+    }
+  }, 300_000);
 }
 
 /** Wall-clock instant we last observed the machine suspend or lock, so a resume
