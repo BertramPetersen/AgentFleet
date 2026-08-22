@@ -29,6 +29,7 @@ import { AssignmentEngine } from './assignmentEngine';
 import { ledgerSpendReader, projectSpend } from './budget';
 import { CanvasServer } from './canvas';
 import { PrWatcher } from './prWatcher';
+import { PreferenceStore } from './preferences';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import type { UsageProvider } from './usage';
@@ -272,10 +273,15 @@ const canvas = new CanvasServer({
 // work card flips to 'review' so its agent is free again (decision D2).
 const prWatcher = new PrWatcher({ hive, projects });
 
+// The preference ledger (C2): the human's learned house rules, injected into
+// every compliance dispatch and grown from Needs-you answers on review cards.
+const preferences = new PreferenceStore(hive);
+
 const assigner = new AssignmentEngine({
   hive,
   projects,
   projectSpend: projectSpendNow,
+  preferences,
   idleAgents: () => {
     const idle = new Set<string>();
     try {
@@ -3269,6 +3275,21 @@ ipcMain.handle('projects:list', async () => {
     archived: a.archived
   })));
   return projects.list();
+});
+ipcMain.handle('compliance:prefs', () => {
+  if (!hive.enabled()) return [];
+  try { return preferences.list(); } catch { return []; }
+});
+ipcMain.handle('compliance:recordAnswer', (_evt, input: unknown) => {
+  if (!hive.enabled()) return { ok: false };
+  const i = input as { taskId?: string; question?: string; answer?: string; projectId?: string };
+  if (typeof i?.taskId !== 'string' || typeof i?.question !== 'string' || typeof i?.answer !== 'string') {
+    return { ok: false };
+  }
+  try {
+    const pref = preferences.recordAnswer({ taskId: i.taskId, question: i.question, answer: i.answer, projectId: i.projectId });
+    return { ok: !!pref, id: pref?.id };
+  } catch { return { ok: false }; }
 });
 ipcMain.handle('canvas:info', async () => {
   try { return await canvas.start(); } catch { return { port: 0, token: '' }; }

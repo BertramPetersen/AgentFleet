@@ -21,7 +21,7 @@
  * engine only ever does what a human could predict from the five rules.
  */
 
-import { decideAssignments, type Decision, type RuleAgent, type RuleProject, type RuleTask } from './assignment';
+import { decideAssignments, isComplianceCard, type Decision, type RuleAgent, type RuleProject, type RuleTask } from './assignment';
 
 interface HiveLike {
   enabled(): boolean;
@@ -45,6 +45,13 @@ export interface AssignmentEngineDeps {
   /** Per-project USD spend from the durable cost ledger (see budget.ts) —
    *  feeds the over-budget rule. Optional: absent means uncapped behavior. */
   projectSpend?: () => Map<string, number>;
+  /** The preference ledger (C2): compliance dispatches carry the human's
+   *  learned house preferences, and injection is counted as exposure. */
+  preferences?: {
+    active(projectId?: string): { id: string }[];
+    digest(projectId?: string): string;
+    markApplied(ids: string[]): void;
+  };
 }
 
 type LedgerTask = RuleTask & { dispatch?: { by?: string; to?: string } };
@@ -57,7 +64,7 @@ function parseLedger(raw: unknown): LedgerTask[] {
     !!t && typeof t === 'object' && typeof (t as { id?: unknown }).id === 'string');
 }
 
-function dispatchBody(t: LedgerTask, rule: string): string {
+function dispatchBody(t: LedgerTask, rule: string, preferencesDigest = ''): string {
   const c = t.contract ?? {};
   const contract = [
     `OBJECTIVE: ${c.objective ?? ''}`,
@@ -68,9 +75,10 @@ function dispatchBody(t: LedgerTask, rule: string): string {
   return [
     `You are assigned task ${t.id}${t.projectId ? ` in project ${t.projectId}` : ''}: "${t.title ?? t.id}".`,
     contract,
+    preferencesDigest,
     'Work it now. When you finish, report the result to god (act: "inform") so the card is moved to done — include the task id.',
     `(Routed by the deterministic assignment rules: ${rule}.)`
-  ].join('\n\n');
+  ].filter(Boolean).join('\n\n');
 }
 
 export class AssignmentEngine {
@@ -113,12 +121,19 @@ export class AssignmentEngine {
       });
       if (!ok) continue;
 
+      let prefsDigest = '';
+      if (isComplianceCard(t) && this.deps.preferences) {
+        try {
+          prefsDigest = this.deps.preferences.digest(t.projectId);
+          this.deps.preferences.markApplied(this.deps.preferences.active(t.projectId).map((p) => p.id));
+        } catch { /* the review still goes out, just without the ledger */ }
+      }
       try {
         hive.send({
           to: d.assignee,
           act: 'request',
           subject: `DISPATCH: ${t.title ?? t.id}`,
-          body: dispatchBody(t, d.rule)
+          body: dispatchBody(t, d.rule, prefsDigest)
         }, 'system');
       } catch { /* message failed — the stamp stands, god sees the card is doing */ }
 

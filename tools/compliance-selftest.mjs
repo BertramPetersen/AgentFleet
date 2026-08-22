@@ -26,6 +26,18 @@ const mod = join(tmp, 'prWatcher.mjs');
 writeFileSync(mod, bundled.outputFiles[0].text);
 const { PrWatcher, reviewCardId } = await import(pathToFileURL(mod).href);
 
+const loadTs = async (name) => {
+  const b = esbuild.buildSync({
+    entryPoints: [join(repoRoot, 'src', 'main', `${name}.ts`)],
+    bundle: true, format: 'esm', platform: 'node', write: false
+  });
+  const f = join(tmp, `${name}.mjs`);
+  writeFileSync(f, b.outputFiles[0].text);
+  return import(pathToFileURL(f).href);
+};
+const { PreferenceStore, CONFIDENCE_FLOOR } = await loadTs('preferences');
+const { AssignmentEngine } = await loadTs('assignmentEngine');
+
 // ── an in-memory hive, shaped like the structural deps ──────────────────────
 const state = {
   tasks: [
@@ -95,6 +107,64 @@ expect(state.log.some((e) => e.kind === 'pr-review-card') && state.log.some((e) 
 const again = await watcher.tick();
 expect(again.length === 0 && state.tasks.filter((t) => t.id === reviewCardId('alpha', 7)).length === 1,
   'a second tick is a no-op — intake is idempotent');
+
+// ── the preference ledger (C2) ──────────────────────────────────────────────
+import('node:fs').then(() => {});
+const { mkdirSync } = await import('node:fs');
+const prefHiveRoot = join(tmp, 'pref-hive');
+mkdirSync(prefHiveRoot, { recursive: true });
+let commits = 0;
+const prefHive = { root: () => prefHiveRoot, ensureHive: () => {}, commit: () => { commits++; } };
+const store = new PreferenceStore(prefHive);
+
+const learned = store.recordAnswer({ taskId: 'rev-x-1', question: 'Tabs or spaces?', answer: 'No reflexive doc comments — comments only for non-obvious WHY' });
+expect(learned && learned.scope === 'global' && learned.confidence === 0.6 && learned.evidence.includes('rev-x-1'),
+  'an answer on a review card becomes a global, evidence-backed preference');
+const strengthened = store.recordAnswer({ taskId: 'rev-x-2', question: 'Again?', answer: 'no reflexive doc comments — comments only for non-obvious why' });
+expect(strengthened.id === learned.id && strengthened.confidence > 0.6 && strengthened.evidence.length === 2,
+  're-answering the same text strengthens the same entry, never duplicates');
+
+store.upsert({ rule: 'Alpha-only convention', scope: 'alpha', confidence: 0.9, rationale: 't', evidence: [] });
+store.upsert({ rule: 'A retired rule', confidence: CONFIDENCE_FLOOR - 0.1, rationale: 't', evidence: [] });
+const alphaDigest = store.digest('alpha');
+const betaDigest = store.digest('beta');
+expect(alphaDigest.includes('Alpha-only convention') && !betaDigest.includes('Alpha-only convention'),
+  'project-overlay entries ride only their own project (D3)');
+expect(!alphaDigest.includes('A retired rule'),
+  'entries below the confidence floor stop being injected');
+
+store.markApplied([learned.id]);
+expect(store.list().find((x) => x.id === learned.id)?.applied === 1,
+  'markApplied counts exposure');
+
+// ── the dispatch carries the ledger ─────────────────────────────────────────
+const sent = [];
+const engineState = {
+  tasks: [{ id: 'rev-alpha-9', title: 'Review PR #9', status: 'todo', dependsOn: [], priority: 1, createdAt: 't',
+            projectId: 'alpha', labels: ['compliance'],
+            contract: { objective: 'review it', output: 'verdict' } }]
+};
+const engineHive = {
+  enabled: () => true,
+  tasks: () => ({ tasks: engineState.tasks }),
+  patchTask: (id, patch) => { Object.assign(engineState.tasks.find((t) => t.id === id), patch); return true; },
+  send: (msg) => { sent.push(msg); return msg; },
+  registry: () => ({ godId: 'god', agents: {
+    'compl-1': { id: 'compl-1', cwd: '/office', role: 'compliance reviewer', capabilities: ['compliance'] }
+  } }),
+  appendLog: () => {}
+};
+const engine = new AssignmentEngine({
+  hive: engineHive,
+  projects: { list: () => [{ id: 'alpha', repoPath: '/repos/alpha' }] },
+  idleAgents: () => new Set(['compl-1']),
+  preferences: store
+});
+engine.tick();
+expect(sent.length === 1 && sent[0].body.includes('HOUSE PREFERENCES') && sent[0].body.includes('No reflexive doc comments'),
+  'a compliance dispatch carries the house preferences');
+expect(store.list().find((x) => x.id === learned.id)?.applied === 2,
+  'injection counts as exposure');
 
 if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
 console.log('\ncompliance selftest: all assertions hold');

@@ -1047,6 +1047,8 @@ const api = {
   // ─── Projects (AgentFleet — hive/projects.json) ─────────────────────────────
   projectsList: (): Promise<Project[]> => ipcRenderer.invoke('projects:list'),
   projectsSpend: (): Promise<Record<string, number>> => ipcRenderer.invoke('projects:spend'),
+  compliancePrefs: (): Promise<{ id: string; rule: string; rationale: string; evidence: string[]; scope: string; confidence: number; applied: number; overridden: number }[]> => ipcRenderer.invoke('compliance:prefs'),
+  complianceRecordAnswer: (input: { taskId: string; question: string; answer: string; projectId?: string }): Promise<{ ok: boolean; id?: string }> => ipcRenderer.invoke('compliance:recordAnswer', input),
   canvasInfo: (): Promise<{ port: number; token: string }> => ipcRenderer.invoke('canvas:info'),
   canvasList: (): Promise<{ agentId: string; file: string; mtimeMs: number; size: number }[]> => ipcRenderer.invoke('canvas:list'),
   projectsUpsert: (project: Project): Promise<{ ok: true; project: Project } | { ok: false; error: string }> =>
