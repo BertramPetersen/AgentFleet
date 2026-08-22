@@ -38,6 +38,15 @@ const loadTs = async (name) => {
 const { PreferenceStore, CONFIDENCE_FLOOR } = await loadTs('preferences');
 const { parseFindingsReport, FindingsHarvester } = await loadTs('findingsHarvester');
 const { CorrectionMiner, mineCardId } = await loadTs('correctionMiner');
+const { layoutGraph, descendantsOf } = await import(pathToFileURL((() => {
+  const b = esbuild.buildSync({
+    entryPoints: [join(repoRoot, 'src', 'renderer', 'src', 'store', 'graphLayout.ts')],
+    bundle: true, format: 'esm', platform: 'node', write: false
+  });
+  const f = join(tmp, 'graphLayout.mjs');
+  writeFileSync(f, b.outputFiles[0].text);
+  return f;
+})()).href);
 const { AssignmentEngine } = await loadTs('assignmentEngine');
 
 // ── an in-memory hive, shaped like the structural deps ──────────────────────
@@ -237,6 +246,30 @@ expect(mineState.tasks.find((t) => t.id === 'rev-beta-4').mined.commits.includes
   'the review card is stamped mined');
 const minedAgain = await miner.tick();
 expect(minedAgain.length === 0, 'mining is idempotent — a stamped review is never re-mined');
+
+// ── project graph layout ────────────────────────────────────────────────────
+const gTasks = [
+  { id: 'a', title: 'a', status: 'done', dependsOn: [], priority: 0, createdAt: 't' },
+  { id: 'b', title: 'b', status: 'todo', dependsOn: ['a'], priority: 0, createdAt: 't' },
+  { id: 'c', title: 'c', status: 'todo', dependsOn: ['a'], priority: 0, createdAt: 't', assignee: 'x' },
+  { id: 'd', title: 'd', status: 'todo', dependsOn: ['b', 'c'], priority: 0, createdAt: 't' }
+];
+const g = layoutGraph(gTasks);
+const nodeOf = (id) => g.nodes.find((n) => n.task.id === id);
+expect(g.edges.every((e) => nodeOf(e.from).layer < nodeOf(e.to).layer),
+  'graph layering: every dependency sits strictly left of its dependent');
+expect(nodeOf('b').state === 'ready' && nodeOf('d').state === 'waiting' && nodeOf('a').state === 'done',
+  'node states: deps-done todo is ready, deps-pending todo waits');
+expect(g.readyNow === 1,
+  'readyNow counts only unassigned ready cards — the concurrency signal');
+const cyclic = layoutGraph([
+  { id: 'p', title: 'p', status: 'todo', dependsOn: ['q'], priority: 0, createdAt: 't' },
+  { id: 'q', title: 'q', status: 'todo', dependsOn: ['p'], priority: 0, createdAt: 't' }
+]);
+expect(cyclic.nodes.length === 2,
+  'a cyclic ledger lays out instead of hanging');
+expect(descendantsOf('a', gTasks).size === 3 && !descendantsOf('d', gTasks).size,
+  'descendantsOf walks the full downstream — the dep editor cycle guard');
 
 if (failures) { console.error(`\n${failures} assertion(s) failed`); process.exit(1); }
 console.log('\ncompliance selftest: all assertions hold');
